@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SerenityConnect - Online Therapy Platform</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2e4d3d;
+      --primary-dark: #1e3b2b;
+      --primary-light: #eaf4ed;
+      --secondary: #3a5e4f;
+      --accent: #f8c537;
+      --text: #333333;
+      --text-light: #666666;
+      --background: #f8f6f3;
+      --white: #ffffff;
+      --border: #d9e0d9;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
+      --radius: 8px;
+      --radius-lg: 12px;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Georgia', serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .navbar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-icon {
+      font-size: 1.8rem;
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: var(--transition);
+      padding: 0.5rem 0;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--accent);
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .hero {
+      background: linear-gradient(rgba(46, 77, 61, 0.7), rgba(46, 77, 61, 0.5)), 
+                  url('https://images.pexels.com/photos/4101143/pexels-photo-4101143.jpeg') no-repeat center center/cover;
+      height: 90vh;
+      min-height: 600px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: var(--white);
+      padding: 2rem;
+      position: relative;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      animation: fadeIn 1s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h2 {
+      font-size: 3.2rem;
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+      line-height: 1.2;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .section {
+      max-width: 1200px;
+      margin: 5rem auto;
+      padding: 0 2rem;
+      text-align: center;
+    }
+
+    .section-header h3 {
+      font-size: 2.25rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .section-header h3::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background-color: var(--accent);
+    }
+
+    .section-header p {
+      font-size: 1.1rem;
+      color: var(--secondary);
+      max-width: 700px;
+      margin: 0 auto 3rem;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .feature-box {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .feature-box:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-box h4 {
+      font-size: 1.25rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .feature-box p {
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+
+    .image-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 3rem;
+    }
+
+    .image-card {
+      position: relative;
+      width: 300px;
+      height: 220px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .image-card:hover {
+      transform: scale(1.03);
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: var(--transition);
+    }
+
+    .image-card:hover img {
+      transform: scale(1.1);
+    }
+
+    .image-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(46, 77, 61, 0.8), transparent);
+      color: var(--white);
+      padding: 1.5rem 1rem 1rem;
+      text-align: left;
+    }
+
+    .image-overlay h5 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .image-overlay p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 2rem;
+      background: var(--primary);
+      color: var(--white);
+      text-decoration: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 500;
+      transition: var(--transition);
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: var(--primary);
+    }
+
+    .btn-accent:hover {
+      background: #f0b825;
+      color: var(--primary-dark);
+    }
+
+    footer {
+      background-color: var(--primary-dark);
+      color: var(--white);
+      padding: 4rem 2rem 2rem;
+      margin-top: 5rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+    }
+
+    .footer-column h4 {
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-bottom: 0.75rem;
+    }
+
+    .footer-column h4::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 40px;
+      height: 2px;
+      background-color: var(--accent);
+    }
+
+    .footer-column p, .footer-column a {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 0.8rem;
+      display: block;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-column a:hover {
+      color: var(--accent);
+      padding-left: 5px;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .social-links a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+      transition: var(--transition);
+    }
+
+    .social-links a:hover {
+      background-color: var(--accent);
+      color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+    }
+
+    /* Carousel Testimonials */
+    .testimonials {
+      background: var(--primary-light);
+      padding: 5rem 2rem;
+      position: relative;
+    }
+
+    .carousel-container {
+      max-width: 800px;
+      margin: 3rem auto 0;
+      position: relative;
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.6s ease-in-out;
+    }
+
+    .carousel-card {
+      background: var(--white);
+      padding: 2.5rem;
+      min-width: 100%;
+      box-sizing: border-box;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      text-align: center;
+      margin: 0 1rem;
+    }
+
+    .carousel-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 1.5rem;
+      border: 4px solid var(--primary-light);
+    }
+
+    .carousel-card h4 {
+      margin: 1rem 0 0.5rem;
+      color: var(--primary);
+      font-size: 1.25rem;
+    }
+
+    .carousel-card p {
+      font-size: 1rem;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    .stars {
+      color: var(--accent);
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+    }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      width: 50px;
+      height: 50px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      border-radius: 50%;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+    }
+
+    .arrow.left {
+      left: -70px;
+    }
+
+    .arrow.right {
+      right: -70px;
+    }
+
+    .arrow:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .carousel-indicators {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+      gap: 0.75rem;
+    }
+
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .indicator.active {
+      background-color: var(--primary);
+      transform: scale(1.2);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+      .hero h2 {
+        font-size: 2.5rem;
+      }
+      
+      .arrow.left {
+        left: -30px;
+      }
+      
+      .arrow.right {
+        right: -30px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: var(--primary-dark);
+        flex-direction: column;
+        padding: 2rem;
+        gap: 1.5rem;
+        box-shadow: var(--shadow);
+      }
+      
+      .nav-links.active {
+        display: flex;
+      }
+      
+      .mobile-menu-btn {
+        display: block;
+      }
+      
+      .hero h2 {
+        font-size: 2rem;
+      }
+      
+      .hero p {
+        font-size: 1.1rem;
+      }
+      
+      .arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      
+      .arrow.left {
+        left: 10px;
+      }
+      
+      .arrow.right {
+        right: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 0 1rem;
+      }
+      
+      .logo h1 {
+        font-size: 1.5rem;
+      }
+      
+      .hero h2 {
+        font-size: 1.8rem;
+      }
+      
+      .section-header h3 {
+        font-size: 1.8rem;
+      }
+      
+      .carousel-card {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="navbar">
+    <div class="logo">
+      <span class="logo-icon"><i class="fas fa-leaf"></i></span>
+      <h1>SerenityConnect</h1>
+    </div>
+    <button class="mobile-menu-btn" id="menuBtn">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="#">Home</a>
+      <a href="login.php">Login</a>
+      <a href="register.html">Register</a>
+      <a href="about.html">About</a>
+      <a href="contactus.php">Contact</a>
+      <a href="self_help.php">Self help</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-content">
+    <h2>Defining a new way forward, together</h2>
+    <p>Professional therapy from the comfort of your home. Begin your journey to mental wellness today.</p>
+    <a href="register.html" class="btn btn-accent">Get Started</a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <h3>Welcome to SerenityConnect</h3>
+    <p>Come to define yourself, your relationships, and your life. We provide online counseling, self-reflection tools, and expert therapy sessions.</p>
+  </div>
+  
+  <div class="features">
+    <div class="feature-box">
+      <div class="feature-icon">
+        <i class="fas fa-user-md"></i>
+      </div>
+      <h4>Licensed Therapists</h4>
+      <p>Connect with certified professionals specialized in various mental health areas.</p>
+    </div>
+    
+    <div class="feature-box">
+      <div class="feature-icon">
+        <i class="fas fa-laptop-house"></i>
+      </div>
+      <h4>Virtual Sessions</h4>
+      <p>Attend therapy from anywhere with our secure video platform.</p>
+    </div>
+    
+    <div class="feature-box">
+      <div class="feature-icon">
+        <i class="fas fa-tools"></i>
+      </div>
+      <h4>Self-Help Resources</h4>
+      <p>Access worksheets, journals, and guided exercises between sessions.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <h3>Explore Our Space</h3>
+    <p>Discover the welcoming environment we've created for your healing journey</p>
+  </div>
+  
+  <div class="image-row">
+    <div class="image-card">
+      <img src="https://st2.depositphotos.com/20363444/42053/i/600/depositphotos_420538186-stock-photo-smiling-brunette-woman-having-consultation.jpg" alt="Therapy Session">
+      <div class="image-overlay">
+        <h5>Individual Therapy</h5>
+        <p>Personalized one-on-one sessions</p>
+      </div>
+    </div>
+    
+    <div class="image-card">
+      <img src="https://st5.depositphotos.com/4218696/72899/i/600/depositphotos_728990842-stock-photo-therapist-seated-patient-taking-notes.jpg" alt="Counseling Session">
+      <div class="image-overlay">
+        <h5>Professional Guidance</h5>
+        <p>Expert support for your needs</p>
+      </div>
+    </div>
+    
+    <div class="image-card">
+      <img src="https://st2.depositphotos.com/20363444/42053/i/600/depositphotos_420537952-stock-photo-little-girl-lying-sofa-toy.jpg" alt="Child Therapy">
+      <div class="image-overlay">
+        <h5>Child Counseling</h5>
+        <p>Specialized care for young ones</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="testimonials">
+  <div class="section-header">
+    <h3>What Our Clients Say</h3>
+    <p>Hear from people who found healing through our platform</p>
+  </div>
+  
+  <div class="carousel-container">
+    <button class="arrow left" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+    <button class="arrow right" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+    
+    <div class="carousel-track" id="carouselTrack">
+      <div class="carousel-card">
+        <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Alice">
+        <div class="stars">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+        </div>
+        <h4>Alice</h4>
+        <p>"SerenityConnect helped me deal with anxiety during lockdown. The therapist was kind, professional and really made a difference in my life when I needed it most."</p>
+      </div>
+      
+      <div class="carousel-card">
+        <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="Sam">
+        <div class="stars">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+        </div>
+        <h4>Sam</h4>
+        <p>"I was hesitant about online therapy but this platform made it simple, safe and effective. The matching process found me the perfect therapist for my needs."</p>
+      </div>
+      
+      <div class="carousel-card">
+        <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Jaimy">
+        <div class="stars">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+        </div>
+        <h4>Jaimy</h4>
+        <p>"I felt heard and supported throughout my sessions. The ability to message my therapist between sessions provided continuous support during tough weeks."</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="carousel-indicators" id="indicators">
+    <div class="indicator active" onclick="goToSlide(0)"></div>
+    <div class="indicator" onclick="goToSlide(1)"></div>
+    <div class="indicator" onclick="goToSlide(2)"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <h3>Begin Your Journey</h3>
+    <p>Through every chapter of your life, we're here to help you find balance, resilience, and peace.</p>
+  </div>
+  <a href="register.html" class="btn">Get Started</a>
+</section>
+
+<footer>
+  <div class="footer-content">
+    <div class="footer-column">
+      <h4>SerenityConnect</h4>
+      <p>Providing accessible mental health care through innovative technology and compassionate professionals.</p>
+      <div class="social-links">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+    
+    <div class="footer-column">
+      <h4>Quick Links</h4>
+      <a href="#">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="self_help.php">Resources</a>
+      <a href="contactus.php">Contact</a>
+    </div>
+    
+    <div class="footer-column">
+      <h4>Services</h4>
+      <a href="#">Individual Therapy</a>
+      <a href="#">Couples Counseling</a>
+      <a href="#">Family Therapy</a>
+      <a href="#">Teen Support</a>
+    </div>
+    
+    <div class="footer-column">
+      <h4>Contact Us</h4>
+      <p><i class="fas fa-map-marker-alt"></i> 123 Wellness Way, Suite 100</p>
+      <p><i class="fas fa-phone"></i> (555) 123-4567</p>
+      <p><i class="fas fa-envelope"></i> help@serenityconnect.com</p>
+    </div>
+  </div>
+  
+  <div class="copyright">
+    &copy; 2025 SerenityConnect. All rights reserved.
+  </div>
+</footer>
+
+<script>
+  // Mobile menu toggle
+  const menuBtn = document.getElementById('menuBtn');
+  const navLinks = document.getElementById('navLinks');
+  
+  menuBtn.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+    menuBtn.innerHTML = navLinks.classList.contains('active') ? 
+      '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+  });
+
+  // Carousel functionality
+  const track = document.getElementById('carouselTrack');
+  const cards = track.children;
+  const indicators = document.getElementById('indicators').children;
+  let index = 0;
+  let autoSlideInterval;
+
+  function updateCarousel() {
+    const offset = index * -100;
+    track.style.transform = `translateX(${offset}%)`;
+    
+    // Update indicators
+    for (let i = 0; i < indicators.length; i++) {
+      indicators[i].classList.toggle('active', i === index);
+    }
+  }
+
+  function nextSlide() {
+    index = (index + 1) % cards.length;
+    updateCarousel();
+    resetAutoSlide();
+  }
+
+  function prevSlide() {
+    index = (index - 1 + cards.length) % cards.length;
+    updateCarousel();
+    resetAutoSlide();
+  }
+
+  function goToSlide(slideIndex) {
+    index = slideIndex;
+    updateCarousel();
+    resetAutoSlide();
+  }
+
+  function resetAutoSlide() {
+    clearInterval(autoSlideInterval);
+    autoSlideInterval = setInterval(nextSlide, 5000);
+  }
+
+  // Initialize auto slide
+  autoSlideInterval = setInterval(nextSlide, 5000);
+
+  // Pause auto slide on hover
+  track.addEventListener('mouseenter', () => {
+    clearInterval(autoSlideInterval);
+  });
+
+  track.addEventListener('mouseleave', () => {
+    autoSlideInterval = setInterval(nextSlide, 5000);
+  });
+</script>
+
+</body>
+</html>

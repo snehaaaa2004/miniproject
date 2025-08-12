@@ -1,0 +1,437 @@
+<?php
+// Add PHP code to handle form submission if needed
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - SerenityConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2e4d3d;
+      --primary-dark: #1e3b2b;
+      --primary-light: #eaf4ed;
+      --secondary: #3a5e4f;
+      --accent: #f8c537;
+      --text: #333333;
+      --text-light: #666666;
+      --background: #f8f6f3;
+      --white: #ffffff;
+      --border: #d9e0d9;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
+      --radius: 8px;
+      --radius-lg: 12px;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Georgia', serif;
+      background: linear-gradient(135deg, var(--background), #e0dcd9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .register-container {
+      background-color: var(--white);
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .register-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(to right, var(--primary), var(--accent));
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .back-btn:hover {
+      color: var(--primary-dark);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo-icon {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      position: relative;
+    }
+
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background-color: var(--accent);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.9rem 1rem 0.9rem 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: var(--transition);
+      background-color: #fefefe;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(46, 77, 61, 0.1);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 2.5rem;
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 2.5rem;
+      color: var(--text-light);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 0.9rem;
+      background-color: var(--primary);
+      color: var(--white);
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 0.5rem;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .register-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    .register-footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .register-footer a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    .password-strength {
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    .strength-meter {
+      height: 4px;
+      background: #eee;
+      border-radius: 2px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+
+    .strength-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: #ccc;
+      transition: width 0.3s ease;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .register-container {
+        padding: 1.5rem;
+      }
+      
+      .logo-text {
+        font-size: 1.3rem;
+      }
+      
+      h2 {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="register-container">
+    <a href="index.html" class="back-btn">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+
+    <div class="logo">
+      <div class="logo-icon">
+        <i class="fas fa-leaf"></i>
+      </div>
+      <div class="logo-text">SerenityConnect</div>
+    </div>
+
+    <h2>Create Your Account</h2>
+
+    <form action="register.php" method="POST" id="registrationForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <i class="fas fa-user input-icon"></i>
+        <input type="text" id="name" name="name" class="form-control" 
+               placeholder="Enter your full name" 
+               pattern="[A-Za-z ]+" 
+               title="Only letters and spaces are allowed" 
+               required />
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <i class="fas fa-envelope input-icon"></i>
+        <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required />
+      </div>
+      
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <i class="fas fa-phone input-icon"></i>
+        <input type="tel" id="phone" name="phone" class="form-control" 
+          placeholder="Enter 10-digit mobile number" 
+          maxlength="10"
+          pattern="[6-9][0-9]{9}"
+          title="Please enter a valid 10-digit Indian mobile number"
+          required />
+        <div class="error-message" id="phoneError">Please enter a valid 10-digit </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" id="password" name="password" class="form-control" 
+          placeholder="Create a password" 
+          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{10,}$"
+          title="Minimum 10 characters, including uppercase, lowercase, number, and special character" 
+          required />
+        <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+        <div class="password-strength">Password Strength: <span id="strengthText">Weak</span></div>
+        <div class="strength-meter">
+          <div class="strength-meter-fill" id="strengthMeter"></div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="role">Account Type</label>
+        <select id="role" name="role" class="form-control" required>
+          <option value="">Select your role</option>
+          <option value="User">Client</option>
+          <option value="Therapist">Therapist</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn">
+        <i class="fas fa-user-plus"></i> Create Account
+      </button>
+    </form>
+
+    <div class="register-footer">
+      Already have an account? <a href="login.php">Sign in here</a>
+    </div>
+  </div>
+
+  <script>
+    // Name field validation (only letters and spaces)
+    const nameField = document.getElementById('name');
+    nameField.addEventListener('input', function() {
+      this.value = this.value.replace(/[^A-Za-z ]/g, '');
+    });
+
+    // Phone number validation (10 digits Indian)
+    const phoneField = document.getElementById('phone');
+    const phoneError = document.getElementById('phoneError');
+    
+    phoneField.addEventListener('input', function() {
+      // Remove any non-digit characters
+      this.value = this.value.replace(/\D/g, '');
+      
+      // Validate Indian mobile number format
+      const isValid = /^[6-9]\d{9}$/.test(this.value);
+      
+      if (this.value.length > 0 && !isValid) {
+        phoneError.style.display = 'block';
+        this.classList.add('invalid');
+      } else {
+        phoneError.style.display = 'none';
+        this.classList.remove('invalid');
+      }
+      
+      // Limit to 10 digits
+      if (this.value.length > 10) {
+        this.value = this.value.slice(0, 10);
+      }
+    });
+
+    // Password visibility toggle
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+    
+    togglePassword.addEventListener('click', function() {
+      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+      password.setAttribute('type', type);
+      this.classList.toggle('fa-eye-slash');
+    });
+
+    // Password strength meter
+    password.addEventListener('input', function() {
+      const strength = calculatePasswordStrength(this.value);
+      const strengthMeter = document.getElementById('strengthMeter');
+      const strengthText = document.getElementById('strengthText');
+      
+      strengthMeter.style.width = strength.percentage + '%';
+      strengthMeter.style.backgroundColor = strength.color;
+      strengthText.textContent = strength.text;
+      strengthText.style.color = strength.color;
+    });
+
+    function calculatePasswordStrength(password) {
+      let strength = 0;
+      
+      // Length check
+      if (password.length >= 10) strength += 1;
+      if (password.length >= 12) strength += 1;
+      
+      // Character type checks
+      if (/[A-Z]/.test(password)) strength += 1;
+      if (/[a-z]/.test(password)) strength += 1;
+      if (/[0-9]/.test(password)) strength += 1;
+      if (/[\W_]/.test(password)) strength += 1;
+      
+      // Determine strength level
+      if (strength < 3) {
+        return { percentage: 33, color: '#ff5252', text: 'Weak' };
+      } else if (strength < 6) {
+        return { percentage: 66, color: '#ffb74d', text: 'Medium' };
+      } else {
+        return { percentage: 100, color: '#4caf50', text: 'Strong' };
+      }
+    }
+
+    // Form validation on submit
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+      const phoneValue = phoneField.value;
+      const isValidPhone = /^[6-9]\d{9}$/.test(phoneValue);
+      
+      if (!isValidPhone) {
+        e.preventDefault();
+        phoneError.style.display = 'block';
+        phoneField.classList.add('invalid');
+        phoneField.focus();
+      }
+    });
+
+    // Form animation on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const registerContainer = document.querySelector('.register-container');
+      registerContainer.style.opacity = '0';
+      registerContainer.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        registerContainer.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        registerContainer.style.opacity = '1';
+        registerContainer.style.transform = 'translateY(0)';
+      }, 100);
+    });
+  </script>
+</body>
+</html>

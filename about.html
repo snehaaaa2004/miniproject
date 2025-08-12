@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - SerenityConnect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2e4d3d;
+      --primary-dark: #1e3b2b;
+      --primary-light: #eaf4ed;
+      --secondary: #3a5e4f;
+      --accent: #f8c537;
+      --text: #333333;
+      --text-light: #666666;
+      --background: #f8f6f3;
+      --white: #ffffff;
+      --border: #d9e0d9;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.12);
+      --radius: 8px;
+      --radius-lg: 12px;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Georgia', serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .navbar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-icon {
+      font-size: 1.8rem;
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: var(--transition);
+      padding: 0.5rem 0;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--accent);
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 2rem 0 0 2rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--primary);
+      color: var(--white);
+      text-decoration: none;
+      border-radius: var(--radius);
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .back-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .about-container {
+      max-width: 1200px;
+      margin: 3rem auto;
+      padding: 0 2rem;
+    }
+
+    .about-hero {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .about-hero h2 {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .about-hero h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background-color: var(--accent);
+    }
+
+    .about-hero p {
+      font-size: 1.2rem;
+      color: var(--secondary);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .about-section {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      margin-bottom: 3rem;
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background-color: var(--accent);
+    }
+
+    .about-section p {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      line-height: 1.8;
+    }
+
+    .highlight {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .feature-list {
+      margin: 2rem 0;
+    }
+
+    .feature-list li {
+      font-size: 1.1rem;
+      padding: 0.75rem 0 0.75rem 3rem;
+      position: relative;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-list li::before {
+      content: '\f00c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      left: 0;
+      top: 0.75rem;
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    .team-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .team-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .team-card:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .team-img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+
+    .team-info {
+      padding: 1.5rem;
+    }
+
+    .team-info h4 {
+      font-size: 1.2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .team-info p {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    .stats-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin: 4rem 0;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 2rem;
+      background: var(--primary-light);
+      border-radius: var(--radius);
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 1rem;
+      color: var(--secondary);
+    }
+
+    footer {
+      background-color: var(--primary-dark);
+      color: var(--white);
+      padding: 4rem 2rem 2rem;
+      margin-top: 5rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+    }
+
+    .footer-column h4 {
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-bottom: 0.75rem;
+    }
+
+    .footer-column h4::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 40px;
+      height: 2px;
+      background-color: var(--accent);
+    }
+
+    .footer-column p, .footer-column a {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 0.8rem;
+      display: block;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-column a:hover {
+      color: var(--accent);
+      padding-left: 5px;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .social-links a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+      transition: var(--transition);
+    }
+
+    .social-links a:hover {
+      background-color: var(--accent);
+      color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: var(--primary-dark);
+        flex-direction: column;
+        padding: 2rem;
+        gap: 1.5rem;
+        box-shadow: var(--shadow);
+      }
+      
+      .nav-links.active {
+        display: flex;
+      }
+      
+      .mobile-menu-btn {
+        display: block;
+      }
+      
+      .about-hero h2 {
+        font-size: 2rem;
+      }
+      
+      .about-hero p {
+        font-size: 1rem;
+      }
+      
+      .about-section {
+        padding: 2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 0 1rem;
+      }
+      
+      .logo h1 {
+        font-size: 1.5rem;
+      }
+      
+      .back-btn {
+        margin: 1rem 0 0 1rem;
+        padding: 0.5rem 1rem;
+      }
+      
+      .about-hero h2 {
+        font-size: 1.8rem;
+      }
+      
+      .section-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <span class="logo-icon"><i class="fas fa-leaf"></i></span>
+        <h1>SerenityConnect</h1>
+      </div>
+      <button class="mobile-menu-btn" id="menuBtn">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="login.php">Login</a>
+        <a href="register.html">Register</a>
+        <a href="about.html">About</a>
+        <a href="contactus.php">Contact</a>
+      </div>
+    </div>
+  </header>
+
+  <a href="javascript:history.back()" class="back-btn">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
+
+  <div class="about-container">
+    <div class="about-hero">
+      <h2>About SerenityConnect</h2>
+      <p>Your trusted partner in mental wellness, providing accessible and compassionate care for all</p>
+    </div>
+
+    <div class="about-section">
+      <p><span class="highlight">SerenityConnect</span> is a pioneering mental wellness platform that brings professional therapy to your fingertips. We believe that mental health is just as important as physical health — and accessing help should be simple, affordable, and free from stigma.</p>
+      
+      <div class="section-title">Our Mission</div>
+      <p>To revolutionize mental healthcare by making therapy accessible to everyone, regardless of their location, background, or circumstances. We're committed to breaking down barriers and creating a world where seeking help for mental wellbeing is as normal as visiting a doctor for a physical ailment.</p>
+      
+      <div class="section-title">Our Vision</div>
+      <p>To become India's most trusted online therapy platform — a safe haven where individuals from all walks of life feel heard, understood, and empowered to achieve emotional balance and mental resilience.</p>
+    </div>
+
+    <div class="about-section">
+      <div class="section-title">Why Choose SerenityConnect?</div>
+      <p>Our platform connects you with certified therapists across various specializations including anxiety, depression, stress management, relationship issues, trauma, and more. We've designed a system that prioritizes your comfort and needs:</p>
+      
+      <ul class="feature-list">
+        <li>Personalized therapist matching based on your unique preferences</li>
+        <li>Secure, confidential video sessions from the comfort of your home</li>
+        <li>Flexible scheduling to fit your busy lifestyle</li>
+        <li>Verified therapists with rigorous credential checks</li>
+        <li>Multilingual support for diverse language needs</li>
+        <li>User-friendly platform accessible on all devices</li>
+        <li>Affordable pricing with transparent options</li>
+        <li>Continuous support between sessions</li>
+      </ul>
+    </div>
+
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-number">500+</div>
+        <div class="stat-label">Licensed Therapists</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">10,000+</div>
+        <div class="stat-label">Sessions Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">95%</div>
+        <div class="stat-label">Client Satisfaction</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">24/7</div>
+        <div class="stat-label">Support Availability</div>
+      </div>
+    </div>
+
+    <div class="about-section">
+      <div class="section-title">Who We Serve</div>
+      <p>SerenityConnect is for everyone. We serve students facing academic pressure, professionals managing work stress, parents navigating family challenges, seniors coping with life transitions, and anyone seeking emotional support. Whether you're going through a difficult period or simply want to maintain your mental wellbeing, our platform is designed to support your journey.</p>
+      
+      <p>Our specialized services include:</p>
+      <ul class="feature-list">
+        <li>Individual therapy for personal growth</li>
+        <li>Couples counseling for relationship health</li>
+        <li>Teen counseling for adolescent challenges</li>
+        <li>Workplace mental health programs</li>
+        <li>Trauma-informed care</li>
+        <li>Cultural-specific therapy approaches</li>
+      </ul>
+    </div>
+
+    <div class="about-section">
+      <div class="section-title">Our Commitment to Quality</div>
+      <p>Every therapist on our platform undergoes a rigorous vetting process that includes credential verification, background checks, and thorough interviews. We maintain the highest standards of professional ethics and confidentiality, ensuring you receive care that meets international best practices.</p>
+      
+      <p>We continuously invest in therapist training and platform improvements to enhance your experience. Your mental health journey is our priority, and we're committed to providing the resources and support you need to thrive.</p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-column">
+        <h4>SerenityConnect</h4>
+        <p>Providing accessible mental health care through innovative technology and compassionate professionals.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      
+      <div class="footer-column">
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a>
+        <a href="about.html">About Us</a>
+        <a href="self_help.php">Resources</a>
+        <a href="contactus.html">Contact</a>
+      </div>
+      
+      <div class="footer-column">
+        <h4>Services</h4>
+        <a href="#">Individual Therapy</a>
+        <a href="#">Couples Counseling</a>
+        <a href="#">Family Therapy</a>
+        <a href="#">Teen Support</a>
+      </div>
+      
+      <div class="footer-column">
+        <h4>Contact Us</h4>
+        <p><i class="fas fa-map-marker-alt"></i> 123 Wellness Way, Suite 100</p>
+        <p><i class="fas fa-phone"></i> (555) 123-4567</p>
+        <p><i class="fas fa-envelope"></i> help@serenityconnect.com</p>
+      </div>
+    </div>
+    
+    <div class="copyright">
+      &copy; 2025 SerenityConnect. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const navLinks = document.getElementById('navLinks');
+    
+    menuBtn.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      menuBtn.innerHTML = navLinks.classList.contains('active') ? 
+        '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+    });
+  </script>
+
+</body>
+</html>
