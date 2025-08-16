@@ -50,184 +50,805 @@ $result = mysqli_query($conn, $sql);
 if (!$result) {
     die("Query Failed: " . mysqli_error($conn));
 }
+
+// Function to generate time slots based on availability period
+function generateTimeSlots($availability) {
+    $timeSlots = [];
+    $availability = trim($availability);
+
+    // Try multiple regex patterns to extract time ranges
+    $patterns = [
+        '/\((\d{1,2}:\d{2}\s*[APMapm]{2})\s*[-–]\s*(\d{1,2}:\d{2}\s*[APMapm]{2})\)/',
+        '/(\d{1,2}:\d{2}\s*[APMapm]{2})\s*[-–]\s*(\d{1,2}:\d{2}\s*[APMapm]{2})/',
+        '/(\d{1,2}:\d{2}[APMapm]{2})\s*[-–]\s*(\d{1,2}:\d{2}[APMapm]{2})/',
+        '/(\d{1,2}[APMapm]{2})\s*[-–]\s*(\d{1,2}[APMapm]{2})/'
+    ];
+
+    $startTime = null;
+    $endTime = null;
+
+    foreach ($patterns as $pattern) {
+        if (preg_match($pattern, $availability, $matches)) {
+            $startTimeStr = str_replace(' ', '', $matches[1]);
+            $endTimeStr = str_replace(' ', '', $matches[2]);
+
+            if (preg_match('/^(\d{1,2})([APMapm]{2})$/', $startTimeStr)) {
+                $startTimeStr = preg_replace('/^(\d{1,2})([APMapm]{2})$/', '$1:00 $2', $startTimeStr);
+            }
+            if (preg_match('/^(\d{1,2})([APMapm]{2})$/', $endTimeStr)) {
+                $endTimeStr = preg_replace('/^(\d{1,2})([APMapm]{2})$/', '$1:00 $2', $endTimeStr);
+            }
+
+            $startTimeStr = preg_replace('/([APMapm]{2})/', ' $1', $startTimeStr);
+            $endTimeStr = preg_replace('/([APMapm]{2})/', ' $1', $endTimeStr);
+            $startTimeStr = strtoupper($startTimeStr);
+            $endTimeStr = strtoupper($endTimeStr);
+
+            $startTime = strtotime($startTimeStr);
+            $endTime = strtotime($endTimeStr);
+
+            if ($startTime && $endTime && $startTime < $endTime) {
+                break;
+            }
+        }
+    }
+
+    if (!$startTime || !$endTime || $startTime >= $endTime) {
+        $availabilityLower = strtolower($availability);
+
+        if (strpos($availabilityLower, 'morning') !== false) {
+            $startTime = strtotime('8:00 AM');
+            $endTime = strtotime('12:00 PM');
+        } elseif (strpos($availabilityLower, 'afternoon') !== false) {
+            $startTime = strtotime('12:00 PM');
+            $endTime = strtotime('5:00 PM');
+        } elseif (strpos($availabilityLower, 'evening') !== false) {
+            $startTime = strtotime('5:00 PM');
+            $endTime = strtotime('9:00 PM');
+        } elseif (strpos($availabilityLower, 'weekend') !== false) {
+            $startTime = strtotime('9:00 AM');
+            $endTime = strtotime('6:00 PM');
+        } else {
+            $startTime = strtotime('9:00 AM');
+            $endTime = strtotime('5:00 PM');
+        }
+    }
+
+    while ($startTime < $endTime) {
+        $timeSlots[] = date("g:i A", $startTime);
+        $startTime = strtotime("+30 minutes", $startTime);
+    }
+
+    return $timeSlots;
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Filtered Therapists</title>
+    <title>Filtered Therapists - SerenityConnect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #1e3a2e;
+            --primary-medium: #2e5543;
+            --primary-light: #3d7058;
+            --accent: #e8b84d;
+            --accent-light: #f4d186;
+            --success: #4ade80;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --background: #fefefe;
+            --background-alt: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            padding: 2rem;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem 1rem;
         }
-        .grid {
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .therapists-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-        .card {
-            background: #fff;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+
+        .therapist-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+            transition: var(--transition);
             position: relative;
         }
-        .card img {
+
+        .therapist-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .therapist-image {
             width: 100%;
-            height: 160px;
+            height: 200px;
             object-fit: cover;
-            border-radius: 6px;
+            background: var(--background-alt);
         }
-        .card h4 {
-            margin: 0.8rem 0 0.3rem;
-            color: #2f6690;
+
+        .card-content {
+            padding: 1.5rem;
         }
-        .card p {
-            margin: 0.2rem 0;
+
+        .therapist-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .therapist-info {
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
             font-size: 0.9rem;
-            color: #444;
         }
+
+        .info-item i {
+            width: 20px;
+            color: var(--accent);
+            margin-right: 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .info-item strong {
+            margin-right: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .info-item span {
+            color: var(--text-secondary);
+        }
+
+        .fees-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
         .book-btn {
-            margin-top: 1rem;
-            background: #2f6690;
-            color: #fff;
-            border: none;
-            padding: 0.6rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .form-container {
-            display: none;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f8f8f8;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-        }
-        .form-container label {
-            display: block;
-            margin-top: 0.6rem;
-            font-weight: bold;
-        }
-        .form-container input,
-        .form-container select,
-        .form-container textarea {
             width: 100%;
-            margin-top: 0.3rem;
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid #ccc;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
         }
-        .form-container button {
-            margin-top: 0.8rem;
-            background: #28a745;
+
+        .book-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .booking-form {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--background-alt);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            background: var(--surface);
+            transition: var(--transition);
+        }
+        
+        .form-input.error,
+        .form-select.error {
+            border-color: #ef4444; /* red-500 */
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            border-color: var(--primary-light);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 58, 46, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            background: var(--surface);
+            transition: var(--transition);
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            background: #22c55e;
+            transform: translateY(-1px);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results i {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--surface);
+            color: var(--primary);
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            margin-bottom: 2rem;
+        }
+
+        .back-btn:hover {
+            background: var(--background-alt);
+            transform: translateX(-2px);
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        /* Payment Popup Styles */
+        .payment-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .payment-popup-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .payment-popup-content {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+            min-width: 320px;
+            max-width: 90vw;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .payment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .payment-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .payment-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .payment-close-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        .payment-form .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .payment-form .form-label {
+            color: var(--text-secondary);
+        }
+        
+        .payment-form .form-input {
+            margin-top: 0.25rem;
+        }
+        
+        .payment-details {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .payment-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+
+        .pay-now-btn {
+            background: var(--success);
             color: #fff;
             border: none;
-            padding: 0.6rem 1rem;
-            border-radius: 4px;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 500;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .pay-now-btn:hover {
+            background: #22c55e;
+        }
+        
+        .cancel-btn {
+            background: var(--border);
+            color: var(--text-secondary);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .cancel-btn:hover {
+            background: #d1d5db;
+        }
+
+        @media (max-width: 768px) {
+            .therapists-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            body {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
+    <?php include 'navbar.php'; ?>
+    <div class="page-header">
+        <a href="javascript:history.back()" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Search
+        </a>
+        <h1 class="page-title">Your Therapist Matches</h1>
+        <p class="page-subtitle">Browse through therapists that match your preferences</p>
+    </div>
 
-<h2 style="text-align:center;">Filtered Therapist Profiles</h2>
-<div class="grid">
-<?php
-while ($row = mysqli_fetch_assoc($result)) {
-    $therapistId = $row['id'];
-    $imagePath = "../uploads/" . htmlspecialchars($row['image']);
-    $defaultImage = "../uploads/default.png";
-    $finalImage = (!empty($row['image']) && file_exists($imagePath)) ? $imagePath : $defaultImage;
+    <div class="therapists-grid">
+        <?php
+        $therapistCount = 0;
+        while ($row = mysqli_fetch_assoc($result)) {
+            $therapistCount++;
+            $therapistId = $row['id'];
+            $imagePath = "../uploads/" . htmlspecialchars($row['image']);
+            $defaultImage = "../uploads/default.png";
+            $finalImage = (!empty($row['image']) && file_exists($imagePath)) ? $imagePath : $defaultImage;
+            
+            $timeSlots = generateTimeSlots($row['availability']);
+        ?>
+            <div class="therapist-card">
+                <img src="<?php echo $finalImage; ?>" alt="<?php echo htmlspecialchars($row['name']); ?>" class="therapist-image">
+                
+                <div class="card-content">
+                    <h3 class="therapist-name"><?php echo htmlspecialchars($row['name']); ?></h3>
+                    
+                    <div class="therapist-info">
+                        <div class="info-item">
+                            <i class="fas fa-venus-mars"></i>
+                            <strong>Gender:</strong>
+                            <span><?php echo htmlspecialchars($row['gender']); ?></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-stethoscope"></i>
+                            <strong>Specialization:</strong>
+                            <span><?php echo htmlspecialchars($row['specialization']); ?></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-medal"></i>
+                            <strong>Experience:</strong>
+                            <span><?php echo htmlspecialchars($row['experience']); ?> years</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-language"></i>
+                            <strong>Languages:</strong>
+                            <span><?php echo htmlspecialchars($row['language']); ?></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-video"></i>
+                            <strong>Session Types:</strong>
+                            <span><?php echo htmlspecialchars($row['mode']); ?></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <strong>Available:</strong>
+                            <span><?php echo ucfirst(htmlspecialchars($row['availability'])); ?></span>
+                        </div>
+                    </div>
+                    
+                    <div class="fees-badge">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span class="therapist-fees"><?php echo htmlspecialchars($row['fees']); ?></span> per session
+                    </div>
 
-    echo "<div class='card'>";
-    echo "<img src='$finalImage' alt='Therapist Image'>";
-    echo "<h4>" . htmlspecialchars($row['name']) . "</h4>";
-    echo "<p><strong>Email:</strong> " . htmlspecialchars($row['email']) . "</p>";
-    echo "<p><strong>Gender:</strong> " . htmlspecialchars($row['gender']) . "</p>";
-    echo "<p><strong>Specialization:</strong> " . htmlspecialchars($row['specialization']) . "</p>";
-    echo "<p><strong>Experience:</strong> " . htmlspecialchars($row['experience']) . " years</p>";
-    echo "<p><strong>Language:</strong> " . htmlspecialchars($row['language']) . "</p>";
-    echo "<p><strong>Mode:</strong> " . htmlspecialchars($row['mode']) . "</p>";
-    echo "<p><strong>Availability:</strong> " . htmlspecialchars($row['availability']) . "</p>";
-    echo "<p><strong>Fees:</strong> $" . htmlspecialchars($row['fees']) . "</p>";
+                    <button class="book-btn" 
+                            data-therapist-id="<?php echo $therapistId; ?>"
+                            data-therapist-name="<?php echo htmlspecialchars($row['name']); ?>"
+                            data-therapist-fees="<?php echo htmlspecialchars($row['fees']); ?>"
+                            onclick="toggleForm('form_<?php echo $therapistId; ?>')">
+                        <i class="fas fa-calendar-plus"></i>
+                        Book Appointment
+                    </button>
 
+                    <div class="booking-form" id="form_<?php echo $therapistId; ?>">
+                        <form id="bookingForm_<?php echo $therapistId; ?>">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-clock"></i>
+                                    Preferred Time
+                                </label>
+                                <select name="appointment_time" class="form-select" required>
+                                    <option value="">Select a time slot</option>
+                                    <?php
+                                    if (!empty($timeSlots)) {
+                                        foreach ($timeSlots as $slot) {
+                                            echo "<option value='" . htmlspecialchars($slot) . "'>" . htmlspecialchars($slot) . "</option>";
+                                        }
+                                    } else {
+                                        echo "<option disabled>No available slots</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
 
-    // Book Button & Form
-    echo "<button class='book-btn' onclick=\"toggleForm('form_$therapistId')\">Book Appointment</button>";
-    echo "<div class='form-container' id='form_$therapistId'>";
-    echo "<form method='POST' action='book_appointment.php'>";
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-video"></i>
+                                    Session Type
+                                </label>
+                                <select name="mode" class="form-select" required>
+                                    <option value="">Choose session type</option>
+                                    <?php
+                                    $modesAvailable = array_map('trim', explode(',', $row['mode']));
+                                    foreach ($modesAvailable as $modeOption) {
+                                        $cleaned = htmlspecialchars($modeOption);
+                                        echo "<option value='$cleaned'>$cleaned</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar"></i>
+                                    Appointment Date
+                                </label>
+                                <input type="date" name="appointment_date" class="form-input" required 
+                                       min="<?php echo date('Y-m-d'); ?>">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i>
+                                    Phone Number
+                                </label>
+                                <input type="tel" name="phone" class="form-input" required 
+                                       placeholder="Enter your phone number">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-comment"></i>
+                                    Additional Notes (Optional)
+                                </label>
+                                <textarea name="description" class="form-textarea" 
+                                          placeholder="Any specific concerns or requests..."></textarea>
+                            </div>
+
+                            <input type="hidden" name="therapist_id" value="<?php echo $therapistId; ?>">
+                            <button type="button" class="submit-booking-btn">
+                                <i class="fas fa-check"></i>
+                                Confirm Details & Pay
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php } ?>
+    </div>
+
+    <?php if ($therapistCount == 0): ?>
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>No therapists found matching your criteria</h3>
+            <p>Try adjusting your filters to see more results</p>
+            <a href="javascript:history.back()" class="back-btn" style="margin-top: 1rem;">
+                <i class="fas fa-arrow-left"></i>
+                Modify Search
+            </a>
+        </div>
+    <?php endif; ?>
+
+    <div class="payment-popup-overlay" id="paymentPopup">
+        <div class="payment-popup-content">
+            <div class="payment-header">
+                <h3>Secure Payment</h3>
+                <button class="payment-close-btn" aria-label="Close Payment"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <p class="payment-details">Total due: **$<span id="paymentAmount">0.00</span>**</p>
+
+            <form id="paymentForm" method="POST" action="book_appointment.php">
+                <div class="form-group">
+                    <label class="form-label" for="cardNumber">Card Number</label>
+                    <input type="text" id="cardNumber" class="form-input" maxlength="16" required placeholder="16-digit card number">
+                </div>
+                <div class="form-group" style="display: flex; gap: 1rem;">
+                    <div style="flex-grow: 1;">
+                        <label class="form-label" for="cardExpiry">Expiry Date</label>
+                        <input type="text" id="cardExpiry" class="form-input" maxlength="5" required placeholder="MM/YY">
+                    </div>
+                    <div>
+                        <label class="form-label" for="cardCvv">CVV</label>
+                        <input type="text" id="cardCvv" class="form-input" maxlength="4" required placeholder="CVV">
+                    </div>
+                </div>
+                
+                <input type="hidden" name="therapist_id" id="hiddenTherapistId">
+                <input type="hidden" name="appointment_time" id="hiddenAppointmentTime">
+                <input type="hidden" name="mode" id="hiddenMode">
+                <input type="hidden" name="appointment_date" id="hiddenAppointmentDate">
+                <input type="hidden" name="phone" id="hiddenPhone">
+                <input type="hidden" name="description" id="hiddenDescription">
+                <input type="hidden" name="payment_confirmed" value="1">
+
+                <div class="payment-actions">
+                    <button type="submit" class="pay-now-btn">Pay & Book</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
-    // Time options from availability
-    echo "<label for='time_$therapistId'>Time</label>";
-echo "<label for='time_$therapistId'>Time</label>";
-echo "<select name='appointment_time' required>";
+    <script>
+        function toggleForm(id) {
+            const form = document.getElementById(id);
+            const isVisible = form.style.display === "block";
+            
+            document.querySelectorAll('.booking-form').forEach(f => {
+                if (f.id !== id) f.style.display = "none";
+            });
+            
+            form.style.display = isVisible ? "none" : "block";
+            
+            if (!isVisible) {
+                form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+        
+        document.querySelectorAll('.submit-booking-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const bookingForm = this.closest('.booking-form');
+                const form = bookingForm.querySelector('form');
+                
+                // Form validation
+                let isValid = true;
+                const requiredInputs = form.querySelectorAll('input[required], select[required]');
+                requiredInputs.forEach(input => {
+                    input.classList.remove('error');
+                    if (!input.value) {
+                        isValid = false;
+                        input.classList.add('error');
+                    }
+                });
+                
+                if (isValid) {
+                    // Populate hidden fields in the global payment form
+                    document.getElementById('hiddenTherapistId').value = form.querySelector('input[name="therapist_id"]').value;
+                    document.getElementById('hiddenAppointmentTime').value = form.querySelector('select[name="appointment_time"]').value;
+                    document.getElementById('hiddenMode').value = form.querySelector('select[name="mode"]').value;
+                    document.getElementById('hiddenAppointmentDate').value = form.querySelector('input[name="appointment_date"]').value;
+                    document.getElementById('hiddenPhone').value = form.querySelector('input[name="phone"]').value;
+                    document.getElementById('hiddenDescription').value = form.querySelector('textarea[name="description"]').value;
 
-$availabilityRaw = $row['availability'];
-$timeSlots = [];
+                    // Update payment amount
+                    const fees = this.closest('.therapist-card').querySelector('.therapist-fees').innerText;
+                    document.getElementById('paymentAmount').innerText = parseFloat(fees).toFixed(2);
+                    
+                    // Show the global payment popup
+                    document.getElementById('paymentPopup').classList.add('show');
+                } else {
+                    alert('Please fill out all required fields.');
+                }
+            });
+        });
+        
+        // Hide popup when close button or overlay is clicked
+        document.querySelector('.payment-close-btn').addEventListener('click', () => {
+            document.getElementById('paymentPopup').classList.remove('show');
+        });
+        
+        document.querySelector('.cancel-btn').addEventListener('click', () => {
+            document.getElementById('paymentPopup').classList.remove('show');
+        });
+        
+        document.getElementById('paymentPopup').addEventListener('click', (e) => {
+            if (e.target.id === 'paymentPopup') {
+                document.getElementById('paymentPopup').classList.remove('show');
+            }
+        });
 
-// Extract time range using regex: e.g., "Afternoon (12:00 PM - 05:00 PM)"
-if (preg_match('/\((\d{1,2}:\d{2}\s[APM]{2})\s*-\s*(\d{1,2}:\d{2}\s[APM]{2})\)/', $availabilityRaw, $matches)) {
-    $startTime = strtotime($matches[1]);
-    $endTime = strtotime($matches[2]);
+        // Basic card validation for demonstration
+        document.getElementById('paymentForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const cardNumber = document.getElementById('cardNumber').value;
+            const cardCvv = document.getElementById('cardCvv').value;
+            const cardExpiry = document.getElementById('cardExpiry').value;
 
-    while ($startTime < $endTime) {
-        $timeSlots[] = date("h:i A", $startTime);
-        $startTime = strtotime("+15 minutes", $startTime);
-    }
-}
+            if (!/^\d{16}$/.test(cardNumber)) {
+                alert('Please enter a valid 16-digit card number.');
+                return;
+            }
+            if (!/^\d{3,4}$/.test(cardCvv)) {
+                alert('Please enter a valid CVV (3 or 4 digits).');
+                return;
+            }
+            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardExpiry)) {
+                alert('Please enter a valid expiry date in MM/YY format.');
+                return;
+            }
 
-if (!empty($timeSlots)) {
-    foreach ($timeSlots as $slot) {
-        echo "<option value='$slot'>$slot</option>";
-    }
-} else {
-    echo "<option disabled>No available slots</option>";
-}
+            // Simulate a successful payment and form submission
+            alert('Payment successful!');
+            
+            // Submitting the form to book_appointment.php
+            this.submit();
+        });
 
-echo "</select>";
-
-
-
-
-    // Mode options based on therapist data
-    echo "<label>Choose Mode:</label>";
-    echo "<select name='mode' required>";
-    $modesAvailable = explode(',', $row['mode']);
-    foreach ($modesAvailable as $modeOption) {
-        $cleaned = htmlspecialchars(trim($modeOption));
-        echo "<option value='$cleaned'>$cleaned</option>";
-    }
-    echo "</select>";
-
-    echo "<label>Appointment Date:</label>";
-    echo "<input type='date' name='appointment_date' required min='" . date('Y-m-d') . "'>";
-
-    echo "<label>Phone:</label>";
-    echo "<input type='tel' name='phone' required>";
-
-    echo "<label>Description (Optional):</label>";
-    echo "<textarea name='description' rows='3'></textarea>";
-
-    echo "<input type='hidden' name='therapist_id' value='$therapistId'>";
-    echo "<button type='submit'>Submit Appointment</button>";
-    echo "</form>";
-    echo "</div>";
-
-    echo "</div>";
-}
-?>
-</div>
-
-<script>
-function toggleForm(id) {
-    const form = document.getElementById(id);
-    form.style.display = form.style.display === "block" ? "none" : "block";
-}
-</script>
-
+    </script>
 </body>
 </html>

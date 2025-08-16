@@ -319,7 +319,7 @@ if (!isset($_SESSION['csrf_token'])) {
                            id="first_name" 
                            name="first_name" 
                            class="form-control" 
-                           value="<?= htmlspecialchars($user['first_name']) ?>" 
+                           value="<?= htmlspecialchars($user['name']) ?>" 
                            placeholder="Enter your first name"
                            maxlength="25"
                            required>
@@ -334,7 +334,7 @@ if (!isset($_SESSION['csrf_token'])) {
                            id="last_name" 
                            name="last_name" 
                            class="form-control" 
-                           value="<?= htmlspecialchars($user['last_name']) ?>" 
+                           value="<?= htmlspecialchars($user['name']) ?>" 
                            placeholder="Enter your last name"
                            maxlength="25"
                            required>
@@ -377,7 +377,7 @@ if (!isset($_SESSION['csrf_token'])) {
         </form>
 
         <div class="back-link">
-            <a href="../dashboard.php"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <a href="http://localhost/serenity/user/dash.php"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
         </div>
     </div>
 

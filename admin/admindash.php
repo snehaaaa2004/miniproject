@@ -279,7 +279,7 @@ if (!$result) {
     </header>
 
     <nav class="admin-nav">
-      <a href="dashboard.php" class="nav-link">
+      <a href="admindash.php" class="nav-link">
         <i class="fas fa-tachometer-alt"></i> Dashboard
       </a>
       <a href="alltherapists.php" class="nav-link">

@@ -1,363 +1,293 @@
 <?php
+session_start();
 
-    session_start();
-
-
-// Prevent caching to disable back button access
-
+// auth_check.php is assumed to handle redirection if not logged in
 include('../auth_check.php');
 
-
-
 $name = $_SESSION['name'] ?? 'User';
-?>
 
+// Include Font Awesome CSS for icons
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>User Dashboard - SerenityConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e3a2e;
+            --primary-medium: #2e5543;
+            --primary-light: #3d7058;
+            --accent: #e8b84d;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-  <title>User Dashboard - SerenityConnect</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #2e4d3d;
-      --primary-dark: #1e3b2b;
-      --primary-light: #eaf4ed;
-      --secondary: #3a5e4f;
-      --accent: #f0ad4e;
-      --text: #333333;
-      --text-light: #666666;
-      --background: #f8f6f3;
-      --white: #ffffff;
-      --border: #e0e0e0;
-      --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      --shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
-      --radius: 8px;
-      --radius-lg: 12px;
-      --transition: all 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+        .dashboard-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--background);
-      color: var(--text);
-      line-height: 1.6;
-      padding: 0;
-    }
+        .main-container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 2rem 1rem;
+            flex-grow: 1;
+        }
 
-    header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: var(--white);
-      padding: 2rem 1rem;
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-    }
+        .header-content {
+            background: linear-gradient(to right, var(--primary), var(--primary-medium));
+            color: var(--surface);
+            padding: 3rem 1rem 5rem;
+            box-shadow: var(--shadow);
+            border-bottom-left-radius: var(--radius-lg);
+            border-bottom-right-radius: var(--radius-lg);
+            position: relative;
+        }
+        
+        .header-text {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 500;
+        }
 
-    header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
-      transform: rotate(30deg);
-    }
+        .header-text p {
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+            color: #e2e8f0;
+        }
 
-    header h2 {
-      font-weight: 600;
-      font-size: 1.8rem;
-      position: relative;
-    }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: -3rem;
+            position: relative;
+            z-index: 10;
+        }
 
-    .container {
-      max-width: 1200px;
-      margin: -2rem auto 2rem;
-      padding: 0 1rem;
-    }
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
 
-    .main-content {
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      padding: 2.5rem;
-      position: relative;
-      z-index: 1;
-    }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
 
-    .welcome {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 2.5rem;
-      padding-bottom: 1.5rem;
-      border-bottom: 1px solid var(--border);
-    }
+        .card-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-content p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+        
+        .card a {
+            margin-top: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .card a:hover {
+            background: var(--primary-medium);
+        }
+        
+        .card a i {
+            margin-left: 0.75rem;
+        }
 
-    .welcome-text h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 0.5rem;
-    }
+        .card.summary-card {
+            grid-column: 1 / -1;
+            display: block;
+            border-left: 5px solid var(--accent);
+            background: #fffdf5;
+            padding: 2.5rem;
+        }
 
-    .welcome-text p {
-      color: var(--text-light);
-      font-size: 0.95rem;
-    }
+        .summary-card h3 {
+            color: var(--text-primary);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
 
-    .user-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: var(--primary-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary);
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
+        .summary-card p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
 
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin: 2rem 0;
-    }
-
-    .card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 1.75rem;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      transition: var(--transition);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-hover);
-      border-color: var(--primary-light);
-    }
-
-    .card-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: var(--primary-light);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.25rem;
-      font-size: 1.75rem;
-      color: var(--primary);
-    }
-
-    .card h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--text);
-    }
-
-    .card p {
-      color: var(--text-light);
-      font-size: 0.9rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .card a {
-      display: inline-block;
-      padding: 0.6rem 1.25rem;
-      background: var(--primary);
-      color: white;
-      border-radius: var(--radius);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.9rem;
-      transition: var(--transition);
-      margin-top: auto;
-    }
-
-    .card a:hover {
-      background: var(--primary-dark);
-      transform: translateY(-2px);
-    }
-
-    .dashboard-summary {
-      background: var(--primary-light);
-      padding: 1.5rem;
-      border-radius: var(--radius);
-      margin: 2.5rem 0;
-      border-left: 4px solid var(--primary);
-    }
-
-    .dashboard-summary h3 {
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
-      color: var(--primary-dark);
-    }
-
-    .dashboard-summary p {
-      color: var(--text);
-    }
-
-    .logout {
-      text-align: center;
-      margin-top: 2.5rem;
-    }
-
-    .logout a {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.75rem 1.5rem;
-      background: transparent;
-      color: var(--primary);
-      border-radius: var(--radius);
-      text-decoration: none;
-      font-weight: 500;
-      transition: var(--transition);
-      border: 1px solid var(--primary);
-    }
-
-    .logout a:hover {
-      background: var(--primary);
-      color: white;
-    }
-
-    .logout a::before {
-      content: "🚪";
-      margin-right: 0.5rem;
-    }
-
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--text-light);
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border);
-      margin-top: 3rem;
-    }
-
-    @media (max-width: 768px) {
-      .main-content {
-        padding: 1.5rem;
-      }
-      
-      .welcome {
-        flex-direction: column;
-        text-align: center;
-      }
-      
-      .user-avatar {
-        margin-top: 1rem;
-      }
-    }
-  </style>
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header-text h1 {
+                font-size: 2rem;
+            }
+            .main-container {
+                padding: 1rem;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .card.summary-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
 </head>
 
-
 <body>
+    <div class="dashboard-wrapper">
+        <?php include 'navbar.php'; ?>
 
-  <?php include 'navbar.php'; ?>
-  
+        <header>
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Hello, <?php echo htmlspecialchars($name); ?></h1>
+                    <p>Welcome to your SerenityConnect dashboard.</p>
+                </div>
+            </div>
+        </header>
 
+        <main class="main-container">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-search"></i></div>
+                    <div class="card-content">
+                        <h3>Find a Therapist</h3>
+                        <p>Browse our directory of licensed professionals and find the right match for you.</p>
+                    </div>
+                    <a href="user.php">
+                        Start Search <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="card-content">
+                        <h3>My Appointments</h3>
+                        <p>View, manage, and track your past and upcoming therapy sessions.</p>
+                    </div>
+                    <a href="view_bookings.php">
+                        View Schedule <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-book"></i></div>
+                    <div class="card-content">
+                        <h3>Wellness Resources</h3>
+                        <p>Explore articles, guides, and tools to support your mental wellness journey.</p>
+                    </div>
+                    <a href="resources.php">
+                        Explore Resources <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-user-cog"></i></div>
+                    <div class="card-content">
+                        <h3>Account Settings</h3>
+                        <p>Update your profile information, change preferences, and manage your account.</p>
+                    </div>
+                    <a href="updateprofile.php">
+                        Manage Profile <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
 
-  <header>
-    <div class="container">
-      <h2>User Dashboard</h2>
+                <div class="card summary-card">
+                    <h3>Your Wellness Journey</h3>
+                    <p>SerenityConnect is here to provide personalized support for your mental health. Your dashboard is the central hub for connecting with therapists, managing your appointments, and accessing valuable resources to help you achieve emotional balance and personal growth. We're committed to helping you on every step of your journey.</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            &copy; 2025 SerenityConnect. All rights reserved.
+        </footer>
     </div>
-  </header>
+    
+    <script>
+        // Prevent page from being cached
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
 
-  <div class="container">
-    <div class="main-content">
-      <div class="welcome">
-        <div class="welcome-text">
-          <h1>Welcome back, <?php echo htmlspecialchars($name); ?></h1>
-          <p>Here's what's happening with your mental wellness journey today</p>
-        </div>
-        <div class="user-avatar">
-          <?php echo strtoupper(substr($name, 0, 1)); ?>
-        </div>
-      </div>
-
-      <div class="dashboard-grid">
-        <div class="card">
-          <div class="card-icon">🔍</div>
-          <h3>Find Therapists</h3>
-          <p>Browse our network of licensed professionals</p>
-          <a href="user.php">Get Started</a>
-        </div>
-        <div class="card">
-          <div class="card-icon">📅</div>
-          <h3>Your Appointments</h3>
-          <p>View and manage your upcoming sessions</p>
-          <a href="view_bookings.php">View Schedule</a>
-        </div>
-        <div class="card">
-          <div class="card-icon">📝</div>
-          <h3>Wellness Resources</h3>
-          <p>Access helpful tools and articles</p>
-          <a href="resources.php">Explore</a>
-        </div>
-        <div class="card">
-          <div class="card-icon">⚙️</div>
-          <h3>Account Settings</h3>
-          <p>Update your profile and preferences</p>
-          <a href="updateprofile.php">Manage</a>
-        </div>
-      </div>
-
-      <div class="dashboard-summary">
-        <h3>Your Wellness Journey</h3>
-        <p>
-          SerenityConnect provides personalized support for your mental health needs. 
-          Use this dashboard to connect with therapists, manage appointments, and 
-          access valuable resources. We're committed to helping you achieve 
-          emotional balance and personal growth.
-        </p>
-      </div>
-
-      <div class="logout">
-        <a href="../logout.php">Logout</a>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    &copy; 2025 SerenityConnect. All rights reserved.
-  </footer>
-  <script>
-// Prevent page from being cached
-window.onpageshow = function(event) {
-    if (event.persisted) {
-        window.location.reload();
-    }
-};
-
-// Clear browser history
-if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.href);
-}
-</script>
+        // Clear browser history
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
 </body>
 </html>

@@ -13,37 +13,39 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
-$therapist_id = trim($_POST['therapist_id'] ?? '');
-
-$rating = intval($_POST['rating'] ?? 0);
-$comment = trim($_POST['review'] ?? '');
-$appointment_id = intval($_POST['appointment_id'] ?? 0);
+$user_id = (int) $_SESSION['user_id'];
+$therapist_id = trim($_POST['therapist_id'] ?? ''); // Keep as string like THR003
+$rating = (int) ($_POST['rating'] ?? 0);
+$comment = trim($_POST['comment'] ?? '');
+$appointment_id = (int) ($_POST['appointment_id'] ?? 0);
 
 // Validation
-//if ($therapist_id <= 0 || $appointment_id <= 0 || $rating < 1 || $rating > 5 || strlen($comment) <= 20) {
-if (false) {
-
+if (
+    empty($therapist_id) ||       // must be non-empty string
+    $appointment_id <= 0 ||
+    $rating < 1 || $rating > 5 ||
+    strlen($comment) < 5
+) {
     echo json_encode([
-    'success' => false,
-    'message' => 'Invalid input.',
-    'debug' => [
-        'therapist_id' => $therapist_id,
-        'appointment_id' => $appointment_id,
-        'rating' => $rating,
-        'comment_length' => strlen($comment),
-        'comment' => $comment
-    ]
-]);
-
+        'success' => false,
+        'message' => 'Invalid input.',
+        'debug' => [
+            'therapist_id' => $therapist_id,
+            'appointment_id' => $appointment_id,
+            'rating' => $rating,
+            'comment_length' => strlen($comment),
+            'comment' => $comment
+        ]
+    ]);
     exit();
 }
 
 // Check appointment ownership
 $check = $conn->prepare("SELECT id FROM appointments WHERE id = ? AND user_id = ? AND therapist_id = ?");
-$check->bind_param("iii", $appointment_id, $user_id, $therapist_id);
+$check->bind_param("iis", $appointment_id, $user_id, $therapist_id); // 's' for string therapist_id
 $check->execute();
 $res = $check->get_result();
+
 if ($res->num_rows === 0) {
     echo json_encode(['success' => false, 'message' => 'Invalid appointment or not yours.']);
     exit();
@@ -54,6 +56,7 @@ $checkReview = $conn->prepare("SELECT id FROM reviews WHERE appointment_id = ?")
 $checkReview->bind_param("i", $appointment_id);
 $checkReview->execute();
 $existing = $checkReview->get_result();
+
 if ($existing->num_rows > 0) {
     echo json_encode(['success' => false, 'message' => 'You already submitted a review.']);
     exit();
@@ -61,15 +64,14 @@ if ($existing->num_rows > 0) {
 
 // Insert review
 $insert = $conn->prepare("INSERT INTO reviews (user_id, therapist_id, appointment_id, rating, comment) VALUES (?, ?, ?, ?, ?)");
-$insert->bind_param("isiss", $user_id, $therapist_id, $appointment_id, $rating, $comment);
+$insert->bind_param("isiis", $user_id, $therapist_id, $appointment_id, $rating, $comment);
 
 if ($insert->execute()) {
     echo json_encode(['success' => true]);
 } else {
     echo json_encode([
         'success' => false,
-        'message' => 'Error saving review: ' . $insert->error  // 👈 this will show exact reason
+        'message' => 'Error saving review: ' . $insert->error
     ]);
 }
-
 ?>
