@@ -121,6 +121,38 @@ function generateTimeSlots($availability) {
 
     return $timeSlots;
 }
+
+// Handle booking form submission (no payment popup, just confirm booking)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) {
+    $therapist_id = $_POST['therapist_id'] ?? null;
+    $appointment_time = $_POST['appointment_time'] ?? null;
+    $mode = $_POST['mode'] ?? null;
+    $appointment_date = $_POST['appointment_date'] ?? null;
+    $phone = $_POST['phone'] ?? null;
+    $description = $_POST['description'] ?? '';
+
+    // Fetch therapist fee using prepared statement
+    $feeAmount = 0;
+    $stmtFee = $conn->prepare("SELECT fees FROM therapists WHERE id = ? LIMIT 1");
+    $stmtFee->bind_param("s", $therapist_id);
+    $stmtFee->execute();
+    $feeResult = $stmtFee->get_result();
+    if ($feeRow = $feeResult->fetch_assoc()) {
+        $feeAmount = floatval($feeRow['fees']);
+    }
+    $stmtFee->close();
+
+    // Insert appointment with amount
+    $stmt = $conn->prepare("INSERT INTO appointments (user_id, therapist_id, appointment_date, appointment_time, mode, phone, description, status, amount) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', ?)");
+    $stmt->bind_param("issssssd", $userId, $therapist_id, $appointment_date, $appointment_time, $mode, $phone, $description, $feeAmount);
+
+    if ($stmt->execute()) {
+        echo "<script>alert('Appointment booked successfully!'); window.location.href='view_bookings.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('Error booking appointment.');</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -624,7 +656,7 @@ function generateTimeSlots($availability) {
                     </button>
 
                     <div class="booking-form" id="form_<?php echo $therapistId; ?>">
-                        <form id="bookingForm_<?php echo $therapistId; ?>">
+                        <form id="bookingForm_<?php echo $therapistId; ?>" method="POST">
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-clock"></i>
@@ -689,9 +721,9 @@ function generateTimeSlots($availability) {
                             </div>
 
                             <input type="hidden" name="therapist_id" value="<?php echo $therapistId; ?>">
-                            <button type="button" class="submit-booking-btn">
+                            <button type="submit" name="book_appointment" class="submit-booking-btn">
                                 <i class="fas fa-check"></i>
-                                Confirm Details & Pay
+                                Confirm Booking
                             </button>
                         </form>
                     </div>
@@ -712,47 +744,6 @@ function generateTimeSlots($availability) {
         </div>
     <?php endif; ?>
 
-    <div class="payment-popup-overlay" id="paymentPopup">
-        <div class="payment-popup-content">
-            <div class="payment-header">
-                <h3>Secure Payment</h3>
-                <button class="payment-close-btn" aria-label="Close Payment"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <p class="payment-details">Total due: **$<span id="paymentAmount">0.00</span>**</p>
-
-            <form id="paymentForm" method="POST" action="book_appointment.php">
-                <div class="form-group">
-                    <label class="form-label" for="cardNumber">Card Number</label>
-                    <input type="text" id="cardNumber" class="form-input" maxlength="16" required placeholder="16-digit card number">
-                </div>
-                <div class="form-group" style="display: flex; gap: 1rem;">
-                    <div style="flex-grow: 1;">
-                        <label class="form-label" for="cardExpiry">Expiry Date</label>
-                        <input type="text" id="cardExpiry" class="form-input" maxlength="5" required placeholder="MM/YY">
-                    </div>
-                    <div>
-                        <label class="form-label" for="cardCvv">CVV</label>
-                        <input type="text" id="cardCvv" class="form-input" maxlength="4" required placeholder="CVV">
-                    </div>
-                </div>
-                
-                <input type="hidden" name="therapist_id" id="hiddenTherapistId">
-                <input type="hidden" name="appointment_time" id="hiddenAppointmentTime">
-                <input type="hidden" name="mode" id="hiddenMode">
-                <input type="hidden" name="appointment_date" id="hiddenAppointmentDate">
-                <input type="hidden" name="phone" id="hiddenPhone">
-                <input type="hidden" name="description" id="hiddenDescription">
-                <input type="hidden" name="payment_confirmed" value="1">
-
-                <div class="payment-actions">
-                    <button type="submit" class="pay-now-btn">Pay & Book</button>
-                    <button type="button" class="cancel-btn">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
     <script>
         function toggleForm(id) {
             const form = document.getElementById(id);
@@ -768,87 +759,6 @@ function generateTimeSlots($availability) {
                 form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
-        
-        document.querySelectorAll('.submit-booking-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const bookingForm = this.closest('.booking-form');
-                const form = bookingForm.querySelector('form');
-                
-                // Form validation
-                let isValid = true;
-                const requiredInputs = form.querySelectorAll('input[required], select[required]');
-                requiredInputs.forEach(input => {
-                    input.classList.remove('error');
-                    if (!input.value) {
-                        isValid = false;
-                        input.classList.add('error');
-                    }
-                });
-                
-                if (isValid) {
-                    // Populate hidden fields in the global payment form
-                    document.getElementById('hiddenTherapistId').value = form.querySelector('input[name="therapist_id"]').value;
-                    document.getElementById('hiddenAppointmentTime').value = form.querySelector('select[name="appointment_time"]').value;
-                    document.getElementById('hiddenMode').value = form.querySelector('select[name="mode"]').value;
-                    document.getElementById('hiddenAppointmentDate').value = form.querySelector('input[name="appointment_date"]').value;
-                    document.getElementById('hiddenPhone').value = form.querySelector('input[name="phone"]').value;
-                    document.getElementById('hiddenDescription').value = form.querySelector('textarea[name="description"]').value;
-
-                    // Update payment amount
-                    const fees = this.closest('.therapist-card').querySelector('.therapist-fees').innerText;
-                    document.getElementById('paymentAmount').innerText = parseFloat(fees).toFixed(2);
-                    
-                    // Show the global payment popup
-                    document.getElementById('paymentPopup').classList.add('show');
-                } else {
-                    alert('Please fill out all required fields.');
-                }
-            });
-        });
-        
-        // Hide popup when close button or overlay is clicked
-        document.querySelector('.payment-close-btn').addEventListener('click', () => {
-            document.getElementById('paymentPopup').classList.remove('show');
-        });
-        
-        document.querySelector('.cancel-btn').addEventListener('click', () => {
-            document.getElementById('paymentPopup').classList.remove('show');
-        });
-        
-        document.getElementById('paymentPopup').addEventListener('click', (e) => {
-            if (e.target.id === 'paymentPopup') {
-                document.getElementById('paymentPopup').classList.remove('show');
-            }
-        });
-
-        // Basic card validation for demonstration
-        document.getElementById('paymentForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const cardNumber = document.getElementById('cardNumber').value;
-            const cardCvv = document.getElementById('cardCvv').value;
-            const cardExpiry = document.getElementById('cardExpiry').value;
-
-            if (!/^\d{16}$/.test(cardNumber)) {
-                alert('Please enter a valid 16-digit card number.');
-                return;
-            }
-            if (!/^\d{3,4}$/.test(cardCvv)) {
-                alert('Please enter a valid CVV (3 or 4 digits).');
-                return;
-            }
-            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardExpiry)) {
-                alert('Please enter a valid expiry date in MM/YY format.');
-                return;
-            }
-
-            // Simulate a successful payment and form submission
-            alert('Payment successful!');
-            
-            // Submitting the form to book_appointment.php
-            this.submit();
-        });
-
     </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <?php
 session_start();
 include('../connect.php');
+include('therapistnav.php');
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Therapist') {
     die("Unauthorized access.");
@@ -76,6 +77,7 @@ $result = mysqli_query($conn, "SELECT a.*, u.name AS user_name
     </style>
 </head>
 <body>
+    
 
 <h2>Your Appointment Requests</h2>
 

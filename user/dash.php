@@ -6,6 +6,7 @@ include('../auth_check.php');
 
 $name = $_SESSION['name'] ?? 'User';
 
+
 // Include Font Awesome CSS for icons
 ?>
 <!DOCTYPE html>

@@ -1,5 +1,7 @@
 <?php
 session_start();
+include('../auth_check.php');
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

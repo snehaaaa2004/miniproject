@@ -10,7 +10,7 @@ header("Expires: 0");
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-   header("Location: /mini%20proj/serenity/login.php"); 
+   header("Location: http://localhost/serenity/login.php"); 
     exit();
 }
 

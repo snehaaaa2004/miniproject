@@ -1,6 +1,8 @@
 <?php
 session_start();
 include('../connect.php');
+include('../auth_check.php');
+
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.html");
@@ -38,6 +40,17 @@ $reviewsResult = $reviewsStmt->get_result();
 $reviews = [];
 while ($review = $reviewsResult->fetch_assoc()) {
     $reviews[$review['appointment_id']] = $review;
+}
+
+// Get payments for these appointments
+$paymentsQuery = "SELECT appointment_id FROM payments WHERE appointment_id IN (SELECT id FROM appointments WHERE user_id = ?)";
+$paymentsStmt = $conn->prepare($paymentsQuery);
+$paymentsStmt->bind_param("i", $user_id);
+$paymentsStmt->execute();
+$paymentsResult = $paymentsStmt->get_result();
+$paidAppointments = [];
+while ($payment = $paymentsResult->fetch_assoc()) {
+    $paidAppointments[$payment['appointment_id']] = true;
 }
 ?>
 <!DOCTYPE html>
@@ -379,8 +392,8 @@ while ($review = $reviewsResult->fetch_assoc()) {
                             <p><i class="fas fa-sticky-note"></i> <strong>Notes:</strong> <?= htmlspecialchars($row['description']) ?></p>
                         <?php endif; ?>
 
-                        <?php if (strtolower($row['status']) === 'confirmed'): ?>
-                            <form action="payment.php" method="POST" style="margin-top:1.5rem;">
+                        <?php if (strtolower($row['status']) === 'confirmed' && empty($paidAppointments[$row['id']])): ?>
+                            <form action="payments.php" method="POST" style="margin-top:1.5rem;">
                                 <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
                                 <input type="hidden" name="therapist_id" value="<?= $row['therapist_id'] ?>">
                                 <button type="submit" class="pay-now-btn">
