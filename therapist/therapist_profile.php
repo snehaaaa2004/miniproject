@@ -155,6 +155,8 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       box-shadow: var(--shadow);
       position: relative;
       overflow: hidden;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
     .profile-card::before {
@@ -200,12 +202,12 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       margin: 0 auto 1.5rem;
       border: 4px solid var(--white);
       box-shadow: var(--shadow);
-      position: relative;
+      display: block;
     }
 
     .profile-details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 1.5rem;
       margin-top: 1.5rem;
     }
@@ -215,6 +217,10 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       border-radius: var(--radius);
       padding: 1.25rem;
       border-left: 4px solid var(--primary);
+      flex: 1 1 300px;
+      min-width: 260px;
+      box-sizing: border-box;
+      margin-bottom: 0;
     }
 
     .detail-group h3 {
@@ -316,6 +322,33 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       }
     }
 
+    @media (max-width: 900px) {
+      .profile-details {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .profile-card {
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .profile-card {
+        padding: 0.5rem;
+      }
+      .profile-header h2 {
+        font-size: 1.3rem;
+      }
+      .profile-photo {
+        width: 110px;
+        height: 110px;
+      }
+      .detail-group {
+        padding: 0.75rem;
+        min-width: 0;
+      }
+    }
+
     @media (max-width: 480px) {
       .logo h1 {
         font-size: 1.3rem;
@@ -399,6 +432,10 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
         <h3><i class="fas fa-dollar-sign"></i> Consultation Fees</h3>
         <p>$<?= htmlspecialchars($therapist['fees'])?></p>
         
+      </div>
+      <div class="detail-group">
+        <h3><i class="fas fa-info-circle"></i> Bio</h3>
+        <p><?= htmlspecialchars($therapist['bio']) ?></p>
       </div>
 
       <div class="btn-container">

@@ -1,6 +1,51 @@
 <?php
 session_start();
 include('../auth_check.php');
+include('../connect.php');
+
+// Generate custom therapist ID
+$check = mysqli_query($conn, "SELECT COUNT(*) AS total FROM therapists");
+$countData = mysqli_fetch_assoc($check);
+$nextId = $countData['total'] + 1;
+$therapistId = 'THR' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $specialization = $_POST['specialization'] ?? '';
+    $experience = $_POST['experience'] ?? '';
+    $language = $_POST['language'] ?? '';
+    $gender = $_POST['gender'] ?? '';
+    $availability = $_POST['availability'] ?? '';
+    $modes = isset($_POST['mode']) ? implode(',', $_POST['mode']) : '';
+    $fees = $_POST['fees'] ?? '';
+    $bio = $_POST['bio'] ?? ''; // Add bio field
+    $user_id = $_SESSION['user_id'];
+
+    // Handle image upload
+    $imageName = '';
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $imgTmp = $_FILES['image']['tmp_name'];
+        $imgExt = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+        $imgNewName = $user_id . '_' . time() . '.' . $imgExt;
+        $imgDest = '../uploads/' . $imgNewName;
+
+        // Move uploaded file
+        if (move_uploaded_file($imgTmp, $imgDest)) {
+            $imageName = $imgNewName;
+        }
+    }
+
+    // Save therapist profile to database (add bio column)
+    $stmt = $conn->prepare("INSERT INTO therapists (id, user_id, specialization, experience, language, gender, availability, mode, fees, image, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssssss", $therapistId, $user_id, $specialization, $experience, $language, $gender, $availability, $modes, $fees, $imageName, $bio);
+
+    if ($stmt->execute()) {
+        echo "<script>alert('Profile submitted successfully!'); window.location.href='therapihome.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('Error submitting profile.');</script>";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -130,7 +175,7 @@ include('../auth_check.php');
 <div class="main-container">
   <div class="register-container">
     <h2>Therapist Profile Submission</h2>
-    <form id="therapistProfileForm" action="dashboard.php" method="POST" enctype="multipart/form-data" novalidate>
+    <form id="therapistProfileForm" action="therapist.php" method="POST" enctype="multipart/form-data" novalidate>
 
 <div class="input-group">
   <label for="specialization" class="required-field">Specialization:</label>
@@ -209,6 +254,12 @@ include('../auth_check.php');
         <input type="file" name="image" accept="image/*" required>
       </div>
 
+      <div class="input-group">
+        <label for="bio" class="required-field">Bio:</label>
+        <textarea id="bio" name="bio" rows="4" placeholder="Write a short bio about yourself..." required></textarea>
+        <div class="error-message" id="bio-error">Please enter your bio</div>
+      </div>
+
       <button type="submit">Complete Profile Submission</button>
     </form>
   </div>
@@ -222,6 +273,7 @@ document.getElementById('therapistProfileForm').addEventListener('submit', funct
   const genderRadios = document.querySelectorAll('input[name="gender"]');
   const availability = document.getElementById('availability');
   const modeCheckboxes = document.querySelectorAll('input[name="mode[]"]');
+  const bio = document.getElementById('bio');
 
   let valid = true;
 
@@ -271,6 +323,14 @@ document.getElementById('therapistProfileForm').addEventListener('submit', funct
     valid = false;
   } else {
     document.getElementById('modes-error').style.display = 'none';
+  }
+
+  // Bio
+  if (!bio.value.trim()) {
+    document.getElementById('bio-error').style.display = 'block';
+    valid = false;
+  } else {
+    document.getElementById('bio-error').style.display = 'none';
   }
 
   if (!valid) e.preventDefault();

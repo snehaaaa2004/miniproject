@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $availability = $_POST['availability'] ?? '';
     $modeArray = $_POST['mode'] ?? [];
     $fees = $_POST['fees'] ?? 0;
+    $bio = $_POST['bio'] ?? ''; // Add bio field
     $modeString = implode(', ', $modeArray);
 
     // Current image
@@ -40,12 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Update DB
+    // Update DB (add bio field)
     $stmt = $conn->prepare("UPDATE therapists 
-        SET specialization=?, experience=?, language=?, gender=?, availability=?, mode=?, image=? 
+        SET specialization=?, experience=?, language=?, gender=?, availability=?, mode=?, fees=?, image=?, bio=?
         WHERE user_id=?");
 
-    $stmt->bind_param("ssssssss", $specialization, $experience, $language, $gender, $availability, $modeString, $imagePath, $user_id);
+    $stmt->bind_param("ssssssssss", $specialization, $experience, $language, $gender, $availability, $modeString, $fees, $imagePath, $bio, $user_id);
 
     if ($stmt->execute()) {
         echo "<script>alert('Profile updated successfully!'); window.location.href='therapist_profile.php';</script>";
@@ -62,6 +63,7 @@ $therapist = mysqli_fetch_assoc($result);
 $availability = $therapist['availability'] ?? '';
 $modes = explode(', ', $therapist['mode'] ?? '');
 $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "../images/default-user.png";
+$bio = $therapist['bio'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -100,7 +102,8 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
     input[type="text"],
     input[type="number"],
     select,
-    input[type="file"] {
+    input[type="file"],
+    textarea {
       width: 100%;
       padding: 10px;
       margin-top: 2px;
@@ -185,8 +188,12 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       <label>Consultation Fees (in USD)</label>
       <input type="number" name="fees" value="<?= htmlspecialchars($therapist['fees']) ?>" required>
 
+      <label>Bio</label>
+      <textarea name="bio" rows="4" placeholder="Write a short bio about yourself..." required><?= htmlspecialchars($bio) ?></textarea>
+
       <label>Profile Photo</label>
-      
+      <input type="file" name="image" accept="image/*">
+
       <div class="img-preview">
         <img src="<?= htmlspecialchars($image) ?>" alt="Profile Picture">
       </div>
