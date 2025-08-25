@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $availability = $_POST['availability'] ?? '';
     $modeArray = $_POST['mode'] ?? [];
     $fees = $_POST['fees'] ?? 0;
-    $bio = $_POST['bio'] ?? ''; // Add bio field
-    $modeString = implode(', ', $modeArray);
+    $bio = $_POST['bio'] ?? '';
+    $modeString = implode(',', $modeArray);
 
     // Current image
     $current = mysqli_query($conn, "SELECT image FROM therapists WHERE user_id = '$user_id'");
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $imageName = basename($_FILES['image']['name']);
-        $uniqueName = uniqid('therapist_') . "_" . $imageName;
+        $uniqueName = $user_id . '_' . time() . '.' . strtolower(pathinfo($imageName, PATHINFO_EXTENSION));
         $targetFile = $targetDir . $uniqueName;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
@@ -61,7 +61,7 @@ $result = mysqli_query($conn, "SELECT * FROM therapists WHERE user_id = '$user_i
 $therapist = mysqli_fetch_assoc($result);
 
 $availability = $therapist['availability'] ?? '';
-$modes = explode(', ', $therapist['mode'] ?? '');
+$modes = explode(',', $therapist['mode'] ?? '');
 $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "../images/default-user.png";
 $bio = $therapist['bio'] ?? '';
 ?>
@@ -71,55 +71,87 @@ $bio = $therapist['bio'] ?? '';
   <meta charset="UTF-8">
   <title>Edit Profile</title>
   <style>
+    :root {
+      --primary: #3a7ca5;
+      --primary-dark: #2f6690;
+      --secondary: #16425b;
+      --accent: #81c3d7;
+      --light: #f8f9fa;
+      --light-gray: #e9ecef;
+      --medium-gray: #ced4da;
+      --dark-gray: #6c757d;
+      --text: #212529;
+      --error: #dc3545;
+      --success: #28a745;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f8f6;
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f5f7fa;
       margin: 0;
       padding: 0;
+      color: var(--text);
     }
 
     .container {
-      width: 80%;
+      width: 100%;
       max-width: 700px;
       background: #fff;
       margin: 2rem auto;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      padding: 2.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
     }
 
     h2 {
       text-align: center;
-      color: #2e4d3d;
+      color: var(--secondary);
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
     }
 
     label {
       display: block;
-      margin: 12px 0 6px;
-      font-weight: 600;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--secondary);
     }
 
-    input[type="text"],
-    input[type="number"],
-    select,
-    input[type="file"],
-    textarea {
+    input, select, textarea {
       width: 100%;
-      padding: 10px;
-      margin-top: 2px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      padding: 0.75rem;
+      border: 1px solid var(--medium-gray);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      background: var(--light);
+      transition: border-color 0.2s;
     }
 
-    .checkbox-group,
-    .radio-group {
-      padding-left: 10px;
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
     }
 
-    .checkbox-group label,
-    .radio-group label {
-      display: block;
-      margin-bottom: 6px;
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .radio-group label, .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 400;
+      cursor: pointer;
     }
 
     .img-preview {
@@ -128,24 +160,41 @@ $bio = $therapist['bio'] ?? '';
     }
 
     .img-preview img {
-      max-width: 150px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid var(--primary);
+      box-shadow: var(--box-shadow);
     }
 
     button {
-      background-color: #2e4d3d;
+      background-color: var(--primary);
       color: white;
+      padding: 0.75rem 1.5rem;
       border: none;
-      padding: 10px 20px;
-      margin-top: 20px;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
       cursor: pointer;
-      border-radius: 6px;
-      font-size: 16px;
+      transition: var(--transition);
+      width: 100%;
+      font-weight: 600;
+      margin-top: 1rem;
     }
 
     button:hover {
-      background-color: #1f3b2a;
+      background-color: var(--primary-dark);
+    }
+
+    @media (max-width: 768px) {
+      .container { padding: 1.5rem; }
+      h2 { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 500px) {
+      .container { padding: 0.5rem; }
+      h2 { font-size: 1.1rem; }
+      input, select, textarea { font-size: 0.95rem; padding: 0.5rem; }
     }
   </style>
 </head>
@@ -153,46 +202,76 @@ $bio = $therapist['bio'] ?? '';
   <div class="container">
     <h2>Edit Your Profile</h2>
     <form method="POST" enctype="multipart/form-data">
-      <label>Specialization</label>
-      <input type="text" name="specialization" value="<?= htmlspecialchars($therapist['specialization']) ?>" required>
 
-      <label>Experience (in years)</label>
-      <input type="number" name="experience" value="<?= htmlspecialchars($therapist['experience']) ?>" required>
-
-      <label>Languages Known</label>
-      <input type="text" name="language" value="<?= htmlspecialchars($therapist['language']) ?>" required>
-
-      <label>Gender</label>
-      <div class="radio-group">
-        <label><input type="radio" name="gender" value="Male" <?= $therapist['gender'] === 'Male' ? 'checked' : '' ?>> Male</label>
-        <label><input type="radio" name="gender" value="Female" <?= $therapist['gender'] === 'Female' ? 'checked' : '' ?>> Female</label>
-        <label><input type="radio" name="gender" value="Other" <?= $therapist['gender'] === 'Other' ? 'checked' : '' ?>> Other</label>
+      <div class="input-group">
+        <label for="specialization" class="required-field">Specialization:</label>
+        <select id="specialization" name="specialization" required>
+          <option value="" disabled>Select specialization</option>
+          <option value="Depression" <?= $therapist['specialization'] == 'Depression' ? 'selected' : '' ?>>Depression</option>
+          <option value="Anxiety" <?= $therapist['specialization'] == 'Anxiety' ? 'selected' : '' ?>>Anxiety</option>
+          <option value="Relationship Counseling" <?= $therapist['specialization'] == 'Relationship Counseling' ? 'selected' : '' ?>>Relationship Counseling</option>
+          <option value="Family Therapy" <?= $therapist['specialization'] == 'Family Therapy' ? 'selected' : '' ?>>Family Therapy</option>
+          <option value="Child & Adolescent Therapy" <?= $therapist['specialization'] == 'Child & Adolescent Therapy' ? 'selected' : '' ?>>Child & Adolescent Therapy</option>
+          <option value="Group Therapy" <?= $therapist['specialization'] == 'Group Therapy' ? 'selected' : '' ?>>Group Therapy</option>
+          <option value="Trauma & PTSD" <?= $therapist['specialization'] == 'Trauma & PTSD' ? 'selected' : '' ?>>Trauma & PTSD</option>
+          <option value="Addiction Counseling" <?= $therapist['specialization'] == 'Addiction Counseling' ? 'selected' : '' ?>>Addiction Counseling</option>
+        </select>
       </div>
 
-      <label>Availability</label>
-      <select name="availability" required>
-        <option value="">Select Availability</option>
-        <option value="Any Time" <?= $availability == 'Any Time' ? 'selected' : '' ?>>Any Time</option>
-        <option value="Mornings (8AM-12PM)" <?= $availability == 'Mornings (8AM-12PM)' ? 'selected' : '' ?>>Mornings (8AM-12PM)</option>
-        <option value="Afternoons (12PM-5PM)" <?= $availability == 'Afternoons (12PM-5PM)' ? 'selected' : '' ?>>Afternoons (12PM-5PM)</option>
-        <option value="Evenings (5PM-9PM)" <?= $availability == 'Evenings (5PM-9PM)' ? 'selected' : '' ?>>Evenings (5PM-9PM)</option>
-        <option value="Weekends" <?= $availability == 'Weekends' ? 'selected' : '' ?>>Weekends</option>
-      </select>
-
-      <label>Modes of Consultation</label>
-      <div class="checkbox-group">
-        <label><input type="checkbox" name="mode[]" value="Phone" <?= in_array('Phone', $modes) ? 'checked' : '' ?>> Audio Call</label>
-        <label><input type="checkbox" name="mode[]" value="Google Meet" <?= in_array('Google Meet', $modes) ? 'checked' : '' ?>> Video Call</label>
-        <label><input type="checkbox" name="mode[]" value="Offline" <?= in_array('Offline', $modes) ? 'checked' : '' ?>> In-person</label>
+      <div class="input-group">
+        <label for="experience" class="required-field">Experience (in years):</label>
+        <input type="number" id="experience" name="experience" placeholder="e.g. 5" min="0" max="60" value="<?= htmlspecialchars($therapist['experience']) ?>" required>
       </div>
-      <label>Consultation Fees (in USD)</label>
-      <input type="number" name="fees" value="<?= htmlspecialchars($therapist['fees']) ?>" required>
 
-      <label>Bio</label>
-      <textarea name="bio" rows="4" placeholder="Write a short bio about yourself..." required><?= htmlspecialchars($bio) ?></textarea>
+      <div class="input-group">
+        <label for="language" class="required-field">Languages Known:</label>
+        <input type="text" id="language" name="language" placeholder="e.g. English, Hindi" value="<?= htmlspecialchars($therapist['language']) ?>" required>
+      </div>
 
-      <label>Profile Photo</label>
-      <input type="file" name="image" accept="image/*">
+      <div class="input-group">
+        <label class="required-field">Gender:</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gender" value="Male" <?= $therapist['gender'] === 'Male' ? 'checked' : '' ?>> Male</label>
+          <label><input type="radio" name="gender" value="Female" <?= $therapist['gender'] === 'Female' ? 'checked' : '' ?>> Female</label>
+          <label><input type="radio" name="gender" value="Non-binary" <?= $therapist['gender'] === 'Non-binary' ? 'checked' : '' ?>> Non-binary</label>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="availability" class="required-field">Availability:</label>
+        <select id="availability" name="availability" required>
+          <option value="" disabled>Select availability</option>
+          <option value="Mornings (8AM-12PM)" <?= $availability == 'Mornings (8AM-12PM)' ? 'selected' : '' ?>>Mornings (8AM-12PM)</option>
+          <option value="Afternoons (12PM-5PM)" <?= $availability == 'Afternoons (12PM-5PM)' ? 'selected' : '' ?>>Afternoons (12PM-5PM)</option>
+          <option value="Evenings (5PM-9PM)" <?= $availability == 'Evenings (5PM-9PM)' ? 'selected' : '' ?>>Evenings (5PM-9PM)</option>
+          <option value="Weekends" <?= $availability == 'Weekends' ? 'selected' : '' ?>>Weekends</option>
+          <option value="Any Time" <?= $availability == 'Any Time' ? 'selected' : '' ?>>Any Time</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label class="required-field">Modes of Consultation:</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="mode[]" value="Google meet" <?= in_array('Google meet', $modes) ? 'checked' : '' ?>> Video Call</label>
+          <label><input type="checkbox" name="mode[]" value="Phone" <?= in_array('Phone', $modes) ? 'checked' : '' ?>> Audio Call</label>
+          <label><input type="checkbox" name="mode[]" value="Offline" <?= in_array('Offline', $modes) ? 'checked' : '' ?>> In-person</label>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="fees" class="required-field">Consultation Fees (in USD):</label>
+        <input type="number" id="fees" name="fees" placeholder="e.g. 50" min="0" step="0.01" value="<?= htmlspecialchars($therapist['fees']) ?>" required>
+      </div>
+
+      <div class="input-group">
+        <label for="bio" class="required-field">Bio:</label>
+        <textarea id="bio" name="bio" rows="4" placeholder="Write a short bio about yourself..." required><?= htmlspecialchars($bio) ?></textarea>
+      </div>
+
+      <div class="input-group">
+        <label class="required-field">Upload Profile Image:</label>
+        <input type="file" name="image" accept="image/*">
+      </div>
 
       <div class="img-preview">
         <img src="<?= htmlspecialchars($image) ?>" alt="Profile Picture">

@@ -599,8 +599,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
             $imagePath = "../uploads/" . htmlspecialchars($row['image']);
             $defaultImage = "../uploads/default.png";
             $finalImage = (!empty($row['image']) && file_exists($imagePath)) ? $imagePath : $defaultImage;
-            
             $timeSlots = generateTimeSlots($row['availability']);
+
+            // Fetch reviews for this therapist
+            $reviewStmt = $conn->prepare("SELECT r.rating, r.comment, u.name AS reviewer FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.therapist_id = ?");
+            $reviewStmt->bind_param("s", $therapistId);
+            $reviewStmt->execute();
+            $reviewsResult = $reviewStmt->get_result();
+            $reviews = [];
+            while ($reviewRow = $reviewsResult->fetch_assoc()) {
+                $reviews[] = $reviewRow;
+            }
+            $reviewStmt->close();
         ?>
             <div class="therapist-card">
                 <img src="<?php echo $finalImage; ?>" alt="<?php echo htmlspecialchars($row['name']); ?>" class="therapist-image">
@@ -726,6 +736,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                                 Confirm Booking
                             </button>
                         </form>
+                    </div>
+
+                    <!-- Therapist Reviews Section -->
+                    <div class="therapist-reviews" style="margin-top:1.5rem;">
+                        <h4 style="color:var(--primary);margin-bottom:0.5rem;"><i class="fas fa-star"></i> Reviews</h4>
+                        <?php if (count($reviews) > 0): ?>
+                            <?php foreach ($reviews as $review): ?>
+                                <div style="background:var(--background-alt);border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.5rem;">
+                                    <div style="font-size:1.1rem;color:var(--accent);font-weight:600;">
+                                        <?php echo str_repeat('★', intval($review['rating'])); ?>
+                                        <?php echo str_repeat('☆', 5-intval($review['rating'])); ?>
+                                        <span style="color:var(--text-secondary);font-size:0.95rem;">by <?php echo htmlspecialchars($review['reviewer']); ?></span>
+                                    </div>
+                                    <div style="margin-top:0.3rem;color:var(--text-primary);font-size:0.98rem;">
+                                        <?php echo htmlspecialchars($review['comment']); ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div style="color:var(--text-muted);font-size:0.95rem;">No reviews yet for this therapist.</div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

@@ -100,6 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       text-align: center;
       color: var(--secondary);
       margin-bottom: 1.5rem;
+      font-size: 2rem;
+      font-weight: 600;
     }
 
     .input-group {
@@ -113,12 +115,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       color: var(--secondary);
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid var(--medium-gray);
       border-radius: var(--border-radius);
       font-size: 1rem;
+      background: var(--light);
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
     }
 
     .radio-group, .checkbox-group {
@@ -157,14 +166,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       cursor: pointer;
       transition: var(--transition);
       width: 100%;
+      font-weight: 600;
+      margin-top: 1rem;
     }
 
     button:hover {
       background-color: var(--primary-dark);
     }
 
+    .img-preview {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .img-preview img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid var(--primary);
+      box-shadow: var(--box-shadow);
+    }
+
     @media (max-width: 768px) {
       .register-container { padding: 1.5rem; }
+      h2 { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 500px) {
+      .main-container { padding: 0.5rem; }
+      .register-container { padding: 0.5rem; }
+      h2 { font-size: 1.1rem; }
+      input, select, textarea { font-size: 0.95rem; padding: 0.5rem; }
     }
   </style>
 </head>
@@ -181,18 +214,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <label for="specialization" class="required-field">Specialization:</label>
   <select id="specialization" name="specialization" required>
     <option value="" disabled selected>Select specialization</option>
-    <option value="Anxiety">Anxiety</option>
     <option value="Depression">Depression</option>
-    <option value="Stress Management">Stress Management</option>
-    <option value="Trauma">Trauma</option>
-    <option value="Grief">Grief</option>
-    <option value="Relationships">Relationships</option>
-    <option value="Self-Esteem">Self-Esteem</option>
-    <option value="Career Counseling">Career Counseling</option>
-    <option value="Child Counseling">Child Counseling</option>
-    <option value="Addiction">Addiction</option>
-    <option value="Anger Management">Anger Management</option>
+    <option value="Anxiety">Anxiety</option>
+    <option value="Relationship Counseling">Relationship Counseling</option>
     <option value="Family Therapy">Family Therapy</option>
+    <option value="Child & Adolescent Therapy">Child & Adolescent Therapy</option>
+    <option value="Group Therapy">Group Therapy</option>
+    <option value="Trauma & PTSD">Trauma & PTSD</option>
+    <option value="Addiction Counseling">Addiction Counseling</option>
   </select>
   <div class="error-message" id="specialization-error">Please select a specialization</div>
 </div>
@@ -214,8 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="radio-group">
           <label><input type="radio" name="gender" value="Male" required> Male</label>
           <label><input type="radio" name="gender" value="Female"> Female</label>
-          <label><input type="radio" name="gender" value="Other"> Other</label>
-          <label><input type="radio" name="gender" value="Prefer not to say"> Prefer not to say</label>
+          <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label>
         </div>
         <div class="error-message" id="gender-error">Please select your gender</div>
       </div>
@@ -224,9 +252,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="availability" class="required-field">Availability:</label>
         <select id="availability" name="availability" required>
           <option value="" disabled selected>Select availability</option>
-          <option value="Mornings (08:00 AM - 12:00 PM)">Mornings (8AM–12PM)</option>
-          <option value="Afternoons (12:00 PM - 05:00 PM)">Afternoons (12PM–5PM)</option>
-          <option value="Evenings(05:00 PM - 09:00 PM)">Evenings (5PM–9PM)</option>
+          <option value="Mornings (8AM-12PM)">Mornings (8AM-12PM)</option>
+          <option value="Afternoons (12PM-5PM)">Afternoons (12PM-5PM)</option>
+          <option value="Evenings (5PM-9PM)">Evenings (5PM-9PM)</option>
           <option value="Weekends">Weekends</option>
           <option value="Any Time">Any Time</option>
         </select>
@@ -236,8 +264,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="input-group">
         <label class="required-field">Modes of Consultation:</label>
         <div class="checkbox-group">
+          <label><input type="checkbox" name="mode[]" value="Google meet"> Video Call</label>
           <label><input type="checkbox" name="mode[]" value="Phone"> Audio Call</label>
-          <label><input type="checkbox" name="mode[]" value="Google Meet"> Video Call</label>
           <label><input type="checkbox" name="mode[]" value="Offline"> In-person</label>
         </div>
         <div class="error-message" id="modes-error">Please select at least one mode</div>
