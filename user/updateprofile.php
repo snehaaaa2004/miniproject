@@ -9,36 +9,24 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Fetch current details using prepared statement
-$stmt = $conn->prepare("SELECT name, email, phone FROM users WHERE id = ?");
+// Fetch current user
+$stmt = $conn->prepare("SELECT id, name, email, phone, password FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
-// Handle backward compatibility if names are stored in single 'name' field
-if (empty($user['first_name']) && empty($user['last_name'])) {
-    $stmt = $conn->prepare("SELECT name, email, phone FROM users WHERE id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $temp_user = $result->fetch_assoc();
-    
-    if ($temp_user && !empty($temp_user['name'])) {
-        $name_parts = explode(' ', $temp_user['name'], 2);
-        $user['first_name'] = $name_parts[0] ?? '';
-        $user['last_name'] = $name_parts[1] ?? '';
-        $user['email'] = $temp_user['email'];
-        $user['phone'] = $temp_user['phone'];
-    }
+// Split name into first/last
+if ($user && !empty($user['name'])) {
+    $name_parts = explode(' ', $user['name'], 2);
+    $user['first_name'] = $name_parts[0] ?? '';
+    $user['last_name'] = $name_parts[1] ?? '';
 }
 
-// Initialize messages
 $success = $error = "";
 
 // Update profile
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF protection
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '')) {
         $error = "Security token mismatch. Please try again.";
     } else {
@@ -47,26 +35,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = trim($_POST['email']);
         $phone = trim($_POST['phone']);
 
-        // Backend validation
-        if (empty($first_name) || empty($last_name) || empty($email) || empty($phone)) {
-            $error = "All fields are required.";
-        } elseif (strlen($first_name) < 2 || strlen($first_name) > 25) {
-            $error = "First name must be between 2 and 25 characters.";
-        } elseif (strlen($last_name) < 2 || strlen($last_name) > 25) {
-            $error = "Last name must be between 2 and 25 characters.";
-        } elseif (!preg_match('/^[a-zA-Z\s\'.-]+$/', $first_name)) {
-            $error = "First name can only contain letters, spaces, apostrophes, and hyphens.";
-        } elseif (!preg_match('/^[a-zA-Z\s\'.-]+$/', $last_name)) {
-            $error = "Last name can only contain letters, spaces, apostrophes, and hyphens.";
+        // Validate profile fields
+        if (!preg_match('/^[a-zA-Z\s\'.-]{2,25}$/', $first_name)) {
+            $error = "Invalid first name.";
+        } elseif (!preg_match('/^[a-zA-Z\s\'.-]{2,25}$/', $last_name)) {
+            $error = "Invalid last name.";
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = "Please enter a valid email address.";
+            $error = "Invalid email address.";
         } elseif (!preg_match('/^[0-9]{10}$/', $phone)) {
-            $error = "Phone number must be exactly 10 digits.";
+            $error = "Phone number must be 10 digits.";
         } else {
-            // Use prepared statement for update
-            $stmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?");
-            $stmt->bind_param("sssi", $name, $email, $phone, $user_id);
-            
+            $full_name = $first_name . " " . $last_name;
+            $stmt = $conn->prepare("UPDATE users SET name=?, email=?, phone=? WHERE id=?");
+            $stmt->bind_param("sssi", $full_name, $email, $phone, $user_id);
             if ($stmt->execute()) {
                 $success = "Profile updated successfully!";
                 $user['first_name'] = $first_name;
@@ -74,13 +55,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user['email'] = $email;
                 $user['phone'] = $phone;
             } else {
-                $error = "Error updating profile. Please try again.";
+                $error = "Error updating profile.";
             }
+        }
+
+        // Password update
+        // Password update
+if (empty($error) && (!empty($_POST['current_password']) || !empty($_POST['new_password']) || !empty($_POST['confirm_password']))) {
+    $current_password = $_POST['current_password'] ?? '';
+    $new_password = $_POST['new_password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+
+    // Re-fetch latest password from DB
+    $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->bind_result($hashed_db_password);
+    $stmt->fetch();
+    $stmt->close();
+
+    if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
+        $error = "All password fields are required.";
+    } elseif ($new_password !== $confirm_password) {
+        $error = "New password and confirm password do not match.";
+    } elseif (!password_verify($current_password, $hashed_db_password)) {
+        $error = "Current password is incorrect.";
+    } elseif (strlen($new_password) < 10 || 
+              !preg_match('/[A-Z]/', $new_password) || 
+              !preg_match('/[0-9]/', $new_password) || 
+              !preg_match('/[^A-Za-z0-9]/', $new_password)) {
+        $error = "New password must be at least 10 characters long and include one uppercase letter, one number, and one special character.";
+    } else {
+        $new_hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+        $stmt = $conn->prepare("UPDATE users SET password=? WHERE id=?");
+        $stmt->bind_param("si", $new_hashed_password, $user_id);
+        if ($stmt->execute()) {
+            $success .= " Password updated successfully!";
+            $user['password'] = $new_hashed_password; // update local user array
+        } else {
+            $error = "Error updating password.";
         }
     }
 }
 
-// Generate CSRF token
+    }
+}
+
+// CSRF
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -88,398 +109,202 @@ if (!isset($_SESSION['csrf_token'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Profile - Your Account</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Update Profile</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    body {font-family:'Segoe UI',sans-serif;background: linear-gradient(135deg, #134d13ff, #1a3f00);
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+    .container {background:#fff;padding:40px;border-radius:20px;box-shadow:0 20px 40px rgba(22, 92, 30, 0.1);width:100%;max-width:500px;}
+    .header {text-align:center;margin-bottom:20px;}
+    .form-group {margin-bottom:20px;position:relative;}
+    .input-wrapper {position:relative;}
+    .form-control {width:100%;padding:15px 45px;border-radius:10px;border:2px solid #e1e5e9;font-size:16px;}
+    .input-wrapper i.fa-user,.input-wrapper i.fa-envelope,.input-wrapper i.fa-phone,.input-wrapper i.fa-lock {position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#667eea;}
+    .toggle-password {position:absolute;right:15px;top:50%;transform:translateY(-50%);cursor:pointer;color:#666;}
+    .btn-primary {width:100%;padding:15px;border:none;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:16px;font-weight:600;cursor:pointer;}
+    .alert {padding:15px;border-radius:10px;margin-bottom:15px;}
+    .alert-success {background:#d1f2eb;color:#0c6846;}
+    .alert-error {background:#fdeaea;color:#c53030;}
+    #passwordStrength {font-size:13px;margin-left:5px;}
+    .input-wrapper {
+    position: relative;
+}
 
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+.input-wrapper .form-control {
+    width: 100%;
+    padding: 15px 45px 15px 45px; /* 45px left for icon, 45px right for toggle */
+    border-radius: 10px;
+    border: 2px solid #e1e5e9;
+    font-size: 16px;
+    box-sizing: border-box;
+}
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+/* left icons (user, email, lock) */
+.input-wrapper i.fa-user,
+.input-wrapper i.fa-envelope,
+.input-wrapper i.fa-phone,
+.input-wrapper i.fa-lock {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #1c5b2dff;
+}
 
-        .header h2 {
-            color: #333;
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
+/* right toggle eye icon */
+.input-wrapper .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+}
 
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
+.input-wrapper .toggle-password:hover {
+    color: #333;
+}
 
-        .form-group {
-            margin-bottom: 25px;
-            position: relative;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-wrapper i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #667eea;
-            font-size: 16px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 15px 15px 15px 45px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #fff;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: #d1f2eb;
-            color: #0c6846;
-            border: 1px solid #7dd3b0;
-        }
-
-        .alert-error {
-            background: #fdeaea;
-            color: #c53030;
-            border: 1px solid #feb2b2;
-        }
-
-        .alert i {
-            margin-right: 8px;
-        }
-
-        #formError {
-            display: none;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .back-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.3s ease;
-        }
-
-        .back-link a:hover {
-            color: #764ba2;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-                margin: 10px;
-            }
-            
-            .header h2 {
-                font-size: 24px;
-            }
-        }
-
-        /* Loading state */
-        .btn-primary.loading {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
-        .btn-primary.loading::after {
-            content: "";
-            width: 16px;
-            height: 16px;
-            margin: 0 0 0 10px;
-            border: 2px solid transparent;
-            border-top-color: #ffffff;
-            border-radius: 50%;
-            animation: button-loading-spinner 1s ease infinite;
-            display: inline-block;
-        }
-
-        @keyframes button-loading-spinner {
-            from {
-                transform: rotate(0turn);
-            }
-            to {
-                transform: rotate(1turn);
-            }
-        }
-    </style>
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h2><i class="fas fa-user-edit"></i> Update Profile</h2>
-            <p>Keep your information current and secure</p>
+<div class="container">
+    <div class="header"><h2><i class="fas fa-user-edit"></i> Update Profile</h2></div>
+
+    <?php if ($success): ?><div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($success) ?></div><?php endif; ?>
+    <?php if ($error): ?><div class="alert alert-error"><i class="fas fa-exclamation-triangle"></i> <?= htmlspecialchars($error) ?></div><?php endif; ?>
+
+    <form method="POST" onsubmit="return validateForm()">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
+        <div class="form-group">
+            <label>First Name</label>
+            <div class="input-wrapper"><i class="fas fa-user"></i>
+                <input type="text" id="first_name" name="first_name" class="form-control" value="<?= htmlspecialchars($user['first_name'] ?? '') ?>" required>
+            </div>
         </div>
 
-        <?php if ($success): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?= htmlspecialchars($success) ?>
+        <div class="form-group">
+            <label>Last Name</label>
+            <div class="input-wrapper"><i class="fas fa-user"></i>
+                <input type="text" id="last_name" name="last_name" class="form-control" value="<?= htmlspecialchars($user['last_name'] ?? '') ?>" required>
             </div>
-        <?php endif; ?>
-
-        <?php if ($error): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-triangle"></i>
-                <?= htmlspecialchars($error) ?>
-            </div>
-        <?php endif; ?>
-
-        <div id="formError" class="alert alert-error"></div>
-
-        <form name="profileForm" method="POST" onsubmit="return handleSubmit(event)" autocomplete="off">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-            
-            <div class="form-group">
-                <label for="first_name">First Name</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-user"></i>
-                    <input type="text" 
-                           id="first_name" 
-                           name="first_name" 
-                           class="form-control" 
-                           value="<?= htmlspecialchars($user['name']) ?>" 
-                           placeholder="Enter your first name"
-                           maxlength="25"
-                           required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="last_name">Last Name</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-user"></i>
-                    <input type="text" 
-                           id="last_name" 
-                           name="last_name" 
-                           class="form-control" 
-                           value="<?= htmlspecialchars($user['name']) ?>" 
-                           placeholder="Enter your last name"
-                           maxlength="25"
-                           required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" 
-                           id="email" 
-                           name="email" 
-                           class="form-control" 
-                           value="<?= htmlspecialchars($user['email']) ?>" 
-                           placeholder="Enter your email address"
-                           required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-phone"></i>
-                    <input type="tel" 
-                           id="phone" 
-                           name="phone" 
-                           class="form-control" 
-                           value="<?= htmlspecialchars($user['phone']) ?>" 
-                           placeholder="Enter 10-digit phone number"
-                           maxlength="10"
-                           pattern="[0-9]{10}"
-                           required>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-primary" id="submitBtn">
-                <i class="fas fa-save"></i> Update Profile
-            </button>
-        </form>
-
-        <div class="back-link">
-            <a href="http://localhost/serenity/user/dash.php"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
         </div>
-    </div>
 
-    <script>
-        function showError(message) {
-            const errorDiv = document.getElementById('formError');
-            errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + message;
-            errorDiv.style.display = 'block';
-            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        <div class="form-group">
+            <label>Email</label>
+            <div class="input-wrapper"><i class="fas fa-envelope"></i>
+                <input type="email" id="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
+            </div>
+        </div>
 
-        function hideError() {
-            document.getElementById('formError').style.display = 'none';
-        }
+        <div class="form-group">
+            <label>Phone</label>
+            <div class="input-wrapper"><i class="fas fa-phone"></i>
+                <input type="tel" id="phone" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone']) ?>" maxlength="10" required>
+            </div>
+        </div>
 
-        function validateForm() {
-            const firstName = document.getElementById('first_name').value.trim();
-            const lastName = document.getElementById('last_name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
+        <h3><i class="fas fa-lock"></i> Change Password</h3>
 
-            hideError();
+        <div class="form-group">
+            <label>Current Password</label>
+            <div class="input-wrapper"><i class="fas fa-lock"></i>
+                <input type="password" id="current_password" name="current_password" class="form-control">
+                <i class="fas fa-eye toggle-password" onclick="togglePassword('current_password', this)"></i>
+            </div>
+        </div>
 
-            if (firstName === '' || lastName === '' || email === '' || phone === '') {
-                showError('All fields are required.');
-                return false;
-            }
+        <div class="form-group">
+            <label>New Password</label>
+            <div class="input-wrapper"><i class="fas fa-lock"></i>
+                <input type="password" id="new_password" name="new_password" class="form-control">
+                <i class="fas fa-eye toggle-password" onclick="togglePassword('new_password', this)"></i>
+            </div>
+            <small id="passwordStrength"></small>
+        </div>
 
-            if (firstName.length < 2 || firstName.length > 25) {
-                showError('First name must be between 2 and 25 characters.');
-                return false;
-            }
+        <div class="form-group">
+            <label>Confirm New Password</label>
+            <div class="input-wrapper"><i class="fas fa-lock"></i>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control">
+                <i class="fas fa-eye toggle-password" onclick="togglePassword('confirm_password', this)"></i>
+            </div>
+        </div>
 
-            if (lastName.length < 2 || lastName.length > 25) {
-                showError('Last name must be between 2 and 25 characters.');
-                return false;
-            }
+        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Update</button>
+        <button type="button" class="btn-primary" style="margin-top:10px;background:linear-gradient(135deg,#444,#222);" onclick="window.history.back();">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+    </form>
+</div>
 
-            const nameRegex = /^[a-zA-Z\s'.-]+$/;
-            if (!nameRegex.test(firstName)) {
-                showError('First name can only contain letters, spaces, apostrophes, and hyphens.');
-                return false;
-            }
+<script>
+function togglePassword(id, icon) {
+    const input = document.getElementById(id);
+    if (input.type === "password") {
+        input.type = "text"; icon.classList.replace("fa-eye","fa-eye-slash");
+    } else {
+        input.type = "password"; icon.classList.replace("fa-eye-slash","fa-eye");
+    }
+}
 
-            if (!nameRegex.test(lastName)) {
-                showError('Last name can only contain letters, spaces, apostrophes, and hyphens.');
-                return false;
-            }
+// Password strength meter
+document.getElementById("new_password").addEventListener("input", function() {
+    const val = this.value;
+    const strength = document.getElementById("passwordStrength");
+    let msg="", color="red";
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showError('Please enter a valid email address.');
-                return false;
-            }
+    const hasUpper = /[A-Z]/.test(val);
+    const hasNumber = /\d/.test(val);
+    const hasSpecial = /[^A-Za-z0-9]/.test(val);
 
-            const phoneRegex = /^[0-9]{10}$/;
-            if (!phoneRegex.test(phone)) {
-                showError('Phone number must be exactly 10 digits.');
-                return false;
-            }
+    if (val.length < 6) {
+        msg = "Too Short"; color = "red";
+    } else if (hasUpper && hasNumber && hasSpecial) {
+        msg = "Strong"; color = "green";
+    } else if ((hasUpper && hasNumber) || (hasUpper && hasSpecial) || (hasNumber && hasSpecial)) {
+        msg = "Medium"; color = "orange";
+    } else {
+        msg = "Weak"; color = "red";
+    }
 
-            return true;
-        }
+    strength.textContent = msg;
+    strength.style.color = color;
+});
 
-        function handleSubmit(event) {
-            if (!validateForm()) {
-                event.preventDefault();
-                return false;
-            }
+function showError(msg,id){alert(msg); if(id) document.getElementById(id).focus(); return false;}
 
-            // Add loading state
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.classList.add('loading');
-            submitBtn.innerHTML = '<i class="fas fa-save"></i> Updating...';
-            
-            return true;
-        }
+function validateForm() {
+    const firstName=document.getElementById("first_name").value.trim();
+    const lastName=document.getElementById("last_name").value.trim();
+    const email=document.getElementById("email").value.trim();
+    const phone=document.getElementById("phone").value.trim();
+    const current=document.getElementById("current_password").value;
+    const newPass=document.getElementById("new_password").value;
+    const confirm=document.getElementById("confirm_password").value;
 
-        // Real-time validation feedback
-        document.getElementById('phone').addEventListener('input', function(e) {
-            this.value = this.value.replace(/\D/g, '');
-        });
+    const nameRegex=/^[a-zA-Z\s'.-]{2,25}$/;
+    const emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex=/^[0-9]{10}$/;
+    const passRegex=/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$/;
 
-        // Name validation - only allow letters, spaces, apostrophes, and hyphens
-        function validateNameInput(e) {
-            const value = e.target.value;
-            const validChars = /^[a-zA-Z\s'.-]*$/;
-            if (!validChars.test(value)) {
-                e.target.value = value.replace(/[^a-zA-Z\s'.-]/g, '');
-            }
-            if (e.target.value.length > 25) {
-                e.target.value = e.target.value.substring(0, 25);
-            }
-        }
+    if(!nameRegex.test(firstName)) return showError("Invalid first name","first_name");
+    if(!nameRegex.test(lastName)) return showError("Invalid last name","last_name");
+    if(!emailRegex.test(email)) return showError("Invalid email","email");
+    if(!phoneRegex.test(phone)) return showError("Phone must be 10 digits","phone");
 
-        document.getElementById('first_name').addEventListener('input', validateNameInput);
-        document.getElementById('last_name').addEventListener('input', validateNameInput);
-
-        // Hide error messages when user starts typing
-        document.querySelectorAll('.form-control').forEach(input => {
-            input.addEventListener('input', hideError);
-        });
-    </script>
+    if(current || newPass || confirm) {
+        if(!current) return showError("Enter current password","current_password");
+        if(!passRegex.test(newPass)) return showError("Password must be at least 10 characters and include one uppercase, one number, and one special character","new_password");
+        if(newPass!==confirm) return showError("Passwords do not match","confirm_password");
+    }
+    return true;
+}
+</script>
 </body>
 </html>

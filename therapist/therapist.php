@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $availability = $_POST['availability'] ?? '';
     $modes = isset($_POST['mode']) ? implode(',', $_POST['mode']) : '';
     $fees = $_POST['fees'] ?? '';
-    $bio = $_POST['bio'] ?? ''; // Add bio field
+    $bio = $_POST['bio'] ?? '';
     $user_id = $_SESSION['user_id'];
 
     // Handle image upload
@@ -29,13 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $imgNewName = $user_id . '_' . time() . '.' . $imgExt;
         $imgDest = '../uploads/' . $imgNewName;
 
-        // Move uploaded file
         if (move_uploaded_file($imgTmp, $imgDest)) {
             $imageName = $imgNewName;
         }
     }
 
-    // Save therapist profile to database (add bio column)
+    // Save therapist profile
     $stmt = $conn->prepare("INSERT INTO therapists (id, user_id, specialization, experience, language, gender, availability, mode, fees, image, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("sssssssssss", $therapistId, $user_id, $specialization, $experience, $language, $gender, $availability, $modes, $fees, $imageName, $bio);
 
@@ -56,29 +55,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #3a7ca5;
-      --primary-dark: #2f6690;
-      --secondary: #16425b;
+      --primary: #166138ff;
+      --primary-dark: #18613aff;
+      --secondary: #0d5127ff;
       --accent: #81c3d7;
       --light: #f8f9fa;
-      --light-gray: #e9ecef;
-      --medium-gray: #ced4da;
       --dark-gray: #6c757d;
-      --text: #212529;
       --error: #dc3545;
-      --success: #28a745;
       --border-radius: 8px;
       --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       --transition: all 0.3s ease;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f5f7fa;
-      color: var(--text);
+      color: #212529;
     }
 
+    /* Navbar */
+    nav {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--box-shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+    .logout-btn {
+      background: white;
+      color: var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .logout-btn:hover {
+      background: var(--accent);
+      color: white;
+    }
+    /* Mobile menu */
+    .menu-toggle {
+      display: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 70px;
+        right: 0;
+        background: var(--primary);
+        flex-direction: column;
+        width: 200px;
+        padding: 1rem;
+      }
+      .nav-links.active { display: flex; }
+      .menu-toggle { display: block; }
+    }
+
+    /* Form Container */
     .main-container {
       display: flex;
       justify-content: center;
@@ -86,7 +145,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       min-height: calc(100vh - 80px);
       padding: 2rem;
     }
-
     .register-container {
       background-color: white;
       padding: 2.5rem;
@@ -95,7 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       width: 100%;
       max-width: 700px;
     }
-
     h2 {
       text-align: center;
       color: var(--secondary);
@@ -103,153 +160,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-size: 2rem;
       font-weight: 600;
     }
-
-    .input-group {
-      margin-bottom: 1.5rem;
-    }
-
-    label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-      color: var(--secondary);
-    }
-
+    .input-group { margin-bottom: 1.5rem; }
+    label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--secondary); }
     input, select, textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid var(--medium-gray);
-      border-radius: var(--border-radius);
-      font-size: 1rem;
+      width: 100%; padding: 0.75rem; border: 1px solid #ced4da;
+      border-radius: var(--border-radius); font-size: 1rem;
       background: var(--light);
-      transition: border-color 0.2s;
     }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--primary);
-      outline: none;
-    }
-
-    .radio-group, .checkbox-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .radio-group label, .checkbox-group label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 400;
-      cursor: pointer;
-    }
-
-    .error-message {
-      color: var(--error);
-      font-size: 0.8rem;
-      margin-top: 0.25rem;
-      display: none;
-    }
-
-    .required-field::after {
-      content: " *";
-      color: var(--error);
-    }
-
     button {
       background-color: var(--primary);
       color: white;
       padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: var(--border-radius);
-      font-size: 1rem;
-      cursor: pointer;
-      transition: var(--transition);
-      width: 100%;
-      font-weight: 600;
-      margin-top: 1rem;
+      border: none; border-radius: var(--border-radius);
+      font-size: 1rem; cursor: pointer; width: 100%;
+      font-weight: 600; margin-top: 1rem;
     }
-
-    button:hover {
-      background-color: var(--primary-dark);
-    }
-
-    .img-preview {
-      text-align: center;
-      margin-top: 1rem;
-    }
-
-    .img-preview img {
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 50%;
-      border: 3px solid var(--primary);
-      box-shadow: var(--box-shadow);
-    }
-
-    @media (max-width: 768px) {
-      .register-container { padding: 1.5rem; }
-      h2 { font-size: 1.5rem; }
-    }
-
-    @media (max-width: 500px) {
-      .main-container { padding: 0.5rem; }
-      .register-container { padding: 0.5rem; }
-      h2 { font-size: 1.1rem; }
-      input, select, textarea { font-size: 0.95rem; padding: 0.5rem; }
-    }
+    button:hover { background-color: var(--primary-dark); }
   </style>
 </head>
 <body>
 
-<?php include 'therapistnav.php'; ?>
+<!-- Navbar -->
+<nav>
+  <div class="logo">SerenityConnect</div>
+  <div class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')">&#9776;</div>
+  <div class="nav-links">
+    <a href="therapihome.php">Home</a>
+    <a href="therapist.php">Profile</a>
+    <a href="appointments.php">Appointments</a>
+    <a href="messages.php">Messages</a>
+    <a href="../logout.php" class="logout-btn">Logout</a>
+  </div>
+</nav>
 
+<!-- Main Form -->
 <div class="main-container">
   <div class="register-container">
     <h2>Therapist Profile Submission</h2>
     <form id="therapistProfileForm" action="therapist.php" method="POST" enctype="multipart/form-data" novalidate>
-
-<div class="input-group">
-  <label for="specialization" class="required-field">Specialization:</label>
-  <select id="specialization" name="specialization" required>
-    <option value="" disabled selected>Select specialization</option>
-    <option value="Depression">Depression</option>
-    <option value="Anxiety">Anxiety</option>
-    <option value="Relationship Counseling">Relationship Counseling</option>
-    <option value="Family Therapy">Family Therapy</option>
-    <option value="Child & Adolescent Therapy">Child & Adolescent Therapy</option>
-    <option value="Group Therapy">Group Therapy</option>
-    <option value="Trauma & PTSD">Trauma & PTSD</option>
-    <option value="Addiction Counseling">Addiction Counseling</option>
-  </select>
-  <div class="error-message" id="specialization-error">Please select a specialization</div>
-</div>
-
       <div class="input-group">
-        <label for="experience" class="required-field">Experience (in years):</label>
-        <input type="number" id="experience" name="experience" placeholder="e.g. 5" min="0" max="60" required>
-        <div class="error-message" id="experience-error">Please enter a valid number (0-60)</div>
+        <label for="specialization">Specialization:</label>
+        <select id="specialization" name="specialization" required>
+          <option value="" disabled selected>Select specialization</option>
+          <option value="Depression">Depression</option>
+          <option value="Anxiety">Anxiety</option>
+          <option value="Relationship Counseling">Relationship Counseling</option>
+          <option value="Family Therapy">Family Therapy</option>
+          <option value="Child & Adolescent Therapy">Child & Adolescent Therapy</option>
+          <option value="Group Therapy">Group Therapy</option>
+          <option value="Trauma & PTSD">Trauma & PTSD</option>
+          <option value="Addiction Counseling">Addiction Counseling</option>
+        </select>
       </div>
-
       <div class="input-group">
-        <label for="language" class="required-field">Languages Known:</label>
+        <label for="experience">Experience (in years):</label>
+        <input type="number" id="experience" name="experience" min="0" max="60" required>
+      </div>
+      <div class="input-group">
+        <label for="language">Languages Known:</label>
         <input type="text" id="language" name="language" placeholder="e.g. English, Hindi" required>
-        <div class="error-message" id="language-error">Please enter languages you speak</div>
       </div>
-
       <div class="input-group">
-        <label class="required-field">Gender:</label>
-        <div class="radio-group">
-          <label><input type="radio" name="gender" value="Male" required> Male</label>
-          <label><input type="radio" name="gender" value="Female"> Female</label>
-          <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label>
-        </div>
-        <div class="error-message" id="gender-error">Please select your gender</div>
+        <label>Gender:</label>
+        <label><input type="radio" name="gender" value="Male"> Male</label>
+        <label><input type="radio" name="gender" value="Female"> Female</label>
+        <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label>
       </div>
-
       <div class="input-group">
-        <label for="availability" class="required-field">Availability:</label>
+        <label for="availability">Availability:</label>
         <select id="availability" name="availability" required>
           <option value="" disabled selected>Select availability</option>
           <option value="Mornings (8AM-12PM)">Mornings (8AM-12PM)</option>
@@ -258,111 +236,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <option value="Weekends">Weekends</option>
           <option value="Any Time">Any Time</option>
         </select>
-        <div class="error-message" id="availability-error">Please select your availability</div>
       </div>
-
       <div class="input-group">
-        <label class="required-field">Modes of Consultation:</label>
-        <div class="checkbox-group">
-          <label><input type="checkbox" name="mode[]" value="Google meet"> Video Call</label>
-          <label><input type="checkbox" name="mode[]" value="Phone"> Audio Call</label>
-          <label><input type="checkbox" name="mode[]" value="Offline"> In-person</label>
-        </div>
-        <div class="error-message" id="modes-error">Please select at least one mode</div>
+        <label>Modes of Consultation:</label>
+        <label><input type="checkbox" name="mode[]" value="Video Call"> Video Call</label>
+        <label><input type="checkbox" name="mode[]" value="Audio Call"> Audio Call</label>
+        <label><input type="checkbox" name="mode[]" value="In-person"> In-person</label>
       </div>
-      <!-- New Fees Field -->
-<div class="input-group">
-  <label for="fees" class="required-field">Consultation Fees (in USD):</label>
-  <input type="number" id="fees" name="fees" placeholder="e.g. 50" min="0" step="0.01" required>
-  <div class="error-message" id="fees-error">Please enter a valid fee amount</div>
-</div>
-
       <div class="input-group">
-        <label class="required-field">Upload Profile Image:</label>
+        <label for="fees">Consultation Fees (USD):</label>
+        <input type="number" id="fees" name="fees" min="0" step="0.01" required>
+      </div>
+      <div class="input-group">
+        <label>Upload Profile Image:</label>
         <input type="file" name="image" accept="image/*" required>
       </div>
-
       <div class="input-group">
-        <label for="bio" class="required-field">Bio:</label>
-        <textarea id="bio" name="bio" rows="4" placeholder="Write a short bio about yourself..." required></textarea>
-        <div class="error-message" id="bio-error">Please enter your bio</div>
+        <label for="bio">Bio:</label>
+        <textarea id="bio" name="bio" rows="4" required></textarea>
       </div>
-
       <button type="submit">Complete Profile Submission</button>
     </form>
   </div>
 </div>
 
-<script>
-document.getElementById('therapistProfileForm').addEventListener('submit', function(e) {
-  const specialization = document.getElementById('specialization');
-  const experience = document.getElementById('experience');
-  const language = document.getElementById('language');
-  const genderRadios = document.querySelectorAll('input[name="gender"]');
-  const availability = document.getElementById('availability');
-  const modeCheckboxes = document.querySelectorAll('input[name="mode[]"]');
-  const bio = document.getElementById('bio');
-
-  let valid = true;
-
-  // Specialization
-  if (!specialization.value.trim()) {
-    document.getElementById('specialization-error').style.display = 'block';
-    valid = false;
-  } else {
-    document.getElementById('specialization-error').style.display = 'none';
-  }
-
-  // Experience
-  if (!experience.value || experience.value < 0 || experience.value > 60) {
-    document.getElementById('experience-error').style.display = 'block';
-    valid = false;
-  } else {
-    document.getElementById('experience-error').style.display = 'none';
-  }
-
-  // Language
-  if (!language.value.trim()) {
-    document.getElementById('language-error').style.display = 'block';
-    valid = false;
-  } else {
-    document.getElementById('language-error').style.display = 'none';
-  }
-
-  // Gender
-  if (![...genderRadios].some(r => r.checked)) {
-    document.getElementById('gender-error').style.display = 'block';
-    valid = false;
-  } else {
-    document.getElementById('gender-error').style.display = 'none';
-  }
-
-  // Availability
-  if (!availability.value) {
-    document.getElementById('availability-error').style.display = 'block';
-    valid = false;
-  } else {
-    document.getElementById('availability-error').style.display = 'none';
-  }
-
-  // Mode
-  if (![...modeCheckboxes].some(c => c.checked)) {
-    document.getElementById('modes-error').style.display = 'block';
-    valid = false;
-  } else {
-    document.getElementById('modes-error').style.display = 'none';
-  }
-
-  // Bio
-  if (!bio.value.trim()) {
-    document.getElementById('bio-error').style.display = 'block';
-    valid = false;
-  } else {
-    document.getElementById('bio-error').style.display = 'none';
-  }
-
-  if (!valid) e.preventDefault();
-});
-</script>
 </body>
 </html>

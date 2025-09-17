@@ -480,6 +480,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="register.html">Register</a>
         <a href="about.html">About</a>
         <a href="contactus.php">Contact</a>
+        <a href="self_help.php">Self help</a>
       </div>
     </div>
   </header>

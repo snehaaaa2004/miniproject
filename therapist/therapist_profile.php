@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../connect.php';
+include('therapistnav.php');
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Therapist') {
     die("Unauthorized access.");
@@ -65,20 +66,15 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       padding: 0;
     }
 
-    header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: var(--white);
-      padding: 1rem;
-      box-shadow: var(--shadow);
-    }
+    
 
     .navbar {
       max-width: 1200px;
-      margin: 0 auto;
+      
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 1rem;
+      
     }
 
     .logo {
@@ -372,26 +368,7 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
 </head>
 <body>
 
-  <header>
-    <div class="navbar">
-      <div class="logo">
-        <span class="logo-icon"><i class="fas fa-leaf"></i></span>
-        <h1>SerenityConnect</h1>
-      </div>
-      <button class="mobile-menu-btn" id="menuBtn">
-        <i class="fas fa-bars"></i>
-      </button>
-      <div class="nav-links" id="navLinks">
-        <a href="therapihome.php">Dashboard</a>
-        <a href="view_bookings.php">Appointments</a>
-        <a href="therapist_profile.php">Profile</a>
-        <a href="therapist_resources.php">Resources</a>
-        <a href="customer_review.php" class="btn">View All Customer Reviews</a>
-
-        <a href="../logout.php">Logout</a>
-      </div>
-    </div>
-  </header>
+  
 
   <div class="profile-container">
     <div class="profile-card">

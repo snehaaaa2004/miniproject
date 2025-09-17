@@ -1,5 +1,6 @@
 <?php
 include('../connect.php');
+include('adminnav.php');
 
 // Mark as read
 if (isset($_GET['read_id'])) {
@@ -26,17 +27,54 @@ $result = mysqli_query($conn, "SELECT * FROM contact_messages ORDER BY created_a
 <head>
   <meta charset="UTF-8">
   <title>Admin - View Messages</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #103e12ff;
+      --primary-dark: #18461cff;
+      --accent: #66bb6a;
+      --secondary: #f1c40f;
+      --light: #ffffff;
+      --dark: #212121;
+      --text: #34495e;
+      --text-light: #7f8c8d;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      --transition: all 0.3s ease;
+    }
+
     body {
-      font-family: 'Georgia', serif;
-      background: #f8f6f3;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(120deg, #f5f9f6, #ecfdf5);
       padding: 30px;
+      margin: 0;
+      color: var(--text);
     }
 
     h2 {
-      color: #2e4d3d;
+      color: var(--primary-dark);
       text-align: center;
+      margin-bottom: 25px;
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .back-link {
+      display: inline-block;
       margin-bottom: 20px;
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 18px;
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      font-size: 14px;
+      box-shadow: var(--box-shadow);
+      transition: var(--transition);
+    }
+
+    .back-link:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
     }
 
     table {
@@ -44,33 +82,54 @@ $result = mysqli_query($conn, "SELECT * FROM contact_messages ORDER BY created_a
       border-collapse: collapse;
       margin-top: 20px;
       background: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
     }
 
-    th, td {
-      padding: 14px;
-      border-bottom: 1px solid #ccc;
+    th {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
       text-align: left;
+      padding: 14px 18px;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: top;
       font-size: 15px;
     }
 
-    tr.unread {
-      background-color: #f0f8ff;
+    tr.unread td {
+      background-color: #f0fdf4;
+      font-weight: 500;
+    }
+
+    tr:hover td {
+      background: #f9fdf9;
     }
 
     a.btn {
-      padding: 6px 12px;
-      background-color: #2e4d3d;
+      padding: 8px 14px;
+      background-color: var(--primary);
       color: white;
       text-decoration: none;
-      border-radius: 5px;
-      font-size: 14px;
+      border-radius: 6px;
+      font-size: 13px;
       margin-right: 5px;
       display: inline-block;
+      box-shadow: var(--box-shadow);
+      transition: var(--transition);
     }
 
     a.btn:hover {
-      background-color: #3a5e4f;
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
     }
 
     .delete-btn {
@@ -80,27 +139,12 @@ $result = mysqli_query($conn, "SELECT * FROM contact_messages ORDER BY created_a
     .delete-btn:hover {
       background-color: #b71c1c;
     }
-
-    .back-link {
-      display: inline-block;
-      margin-bottom: 20px;
-      background-color: #2e4d3d;
-      color: white;
-      padding: 10px 18px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .back-link:hover {
-      background-color: #3a5e4f;
-    }
   </style>
 </head>
 <body>
 
-  <a class="back-link" href="admindash.php">← Back to Dashboard</a>
-  <h2>Contact Messages</h2>
+  
+  <h2>📩 Contact Messages</h2>
 
   <table>
     <tr>
@@ -118,7 +162,7 @@ $result = mysqli_query($conn, "SELECT * FROM contact_messages ORDER BY created_a
         <td><?= htmlspecialchars($row['name']) ?></td>
         <td><?= htmlspecialchars($row['email']) ?></td>
         <td><?= nl2br(htmlspecialchars($row['message'])) ?></td>
-        <td><?= $row['created_at'] ?></td>
+        <td><?= date('M j, Y g:i a', strtotime($row['created_at'])) ?></td>
         <td>
           <?php if (!$row['is_read']) : ?>
             <a class="btn" href="?read_id=<?= $row['id'] ?>">Mark as Read</a>

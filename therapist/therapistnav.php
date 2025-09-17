@@ -1,5 +1,16 @@
-<?php
-$current_page = basename($_SERVER['PHP_SELF']);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SerenityConnect - Hamburger Menu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<?php 
+// Simulate the current page for demo purposes
+$current_page = 'therapihome.php'; 
 ?>
 
 <header>
@@ -12,25 +23,55 @@ $current_page = basename($_SERVER['PHP_SELF']);
       <i class="fas fa-bars"></i>
     </button>
     <div class="nav-links" id="navLinks">
-      <a href="therapihome.php" class="<?= ($current_page == 'therapihome.php') ? 'active' : '' ?>">Dashboard</a>
-      <a href="appointment.php" class="<?= ($current_page == 'appointment.php') ? 'active' : '' ?>">Appointments</a>
-      <a href="therapist_profile.php" class="<?= ($current_page == 'therapist_profile.php') ? 'active' : '' ?>">Profile</a>
-      <a href="reviews.php" class="<?= ($current_page == 'reviews.php') ? 'active' : '' ?>">Reviews</a>
-      <a href="/mini%20proj/serenity/logout.php" class="btn">Logout</a>
+      <a href="therapihome.php" class="<?= ($current_page == 'therapihome.php') ? 'active' : '' ?>">
+        <i class="fas fa-home"></i>Dashboard
+      </a>
+      <a href="appointment.php" class="<?= ($current_page == 'appointment.php') ? 'active' : '' ?>">
+        <i class="fas fa-calendar-alt"></i>Appointments
+      </a>
+      <a href="therapist_profile.php" class="<?= ($current_page == 'therapist_profile.php') ? 'active' : '' ?>">
+        <i class="fas fa-user"></i>Profile
+      </a>
+      <a href="customer_review.php" class="<?= ($current_page == 'reviews.php') ? 'active' : '' ?>">
+        <i class="fas fa-star"></i>Reviews
+      </a>
+      <a href="/serenity/logout.php" class="btn logout-btn">
+        <i class="fas fa-sign-out-alt"></i>Logout
+      </a>
     </div>
   </div>
 </header>
 
+<!-- Demo content to show the sticky navbar -->
+
 <style>
-.navbar {
-  background: linear-gradient(135deg, #2e4d3d 0%, #3a5e4d 100%);
+* {
+  margin: 0;
   padding: 0;
-  color: white;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- Header Styles --- */
+header {
   position: sticky;
   top: 0;
-  z-index: 999;
+  z-index: 1000;
+}
+
+.navbar {
+  background: linear-gradient(135deg,#1e3b2b , #3a5e4d 100%);
+  padding: 15px 30px;
+  color: white;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
 }
 
 .logo {
@@ -46,7 +87,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 .logo-icon {
   font-size: 1.6rem;
-  color: #a8e6cf;
+  color:#f8c537;
   text-shadow: 0 0 8px rgba(168, 230, 207, 0.3);
 }
 
@@ -55,16 +96,17 @@ h1 {
   font-size: 1.5rem;
   color: white;
   letter-spacing: 0.5px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
 }
 
+/* --- Navigation Links --- */
 .nav-links {
-  list-style: none;
   display: flex;
   gap: 25px;
   margin: 0;
   padding: 0;
   align-items: center;
+  list-style: none;
 }
 
 .nav-links a {
@@ -78,6 +120,7 @@ h1 {
   align-items: center;
   gap: 8px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .nav-links a:hover {
@@ -92,7 +135,7 @@ h1 {
 }
 
 .btn {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.08) !important;
   padding: 10px 20px !important;
 }
 
@@ -100,26 +143,41 @@ h1 {
   background: rgba(255,255,255,0.2) !important;
 }
 
+/* --- Mobile Menu Button --- */
 .mobile-menu-btn {
   display: none;
-  background: transparent;
+  background: none;
   border: none;
   color: white;
   font-size: 1.5rem;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
+.mobile-menu-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* --- Mobile Styles --- */
 @media (max-width: 992px) {
+  .navbar {
+    padding: 15px 20px;
+  }
+  
   .nav-links {
     display: none;
-    flex-direction: column;
     position: absolute;
     top: 100%;
     left: 0;
     width: 100%;
-    background: #2e4d3d;
-    padding: 15px 0;
+    background: linear-gradient(135deg, #2e4d3d 0%, #3a5e4d 100%);
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
     border-top: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
   
   .nav-links.active {
@@ -127,23 +185,102 @@ h1 {
   }
   
   .nav-links a {
-    padding: 10px 12px;
-    font-size: 0.9rem;
+    padding: 15px 20px;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.95rem;
+  }
+  
+  .nav-links a:last-child {
+    border-bottom: none;
   }
   
   .mobile-menu-btn {
     display: block;
   }
+  
+  .logout-btn {
+    background: rgba(255,255,255,0.1) !important;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 12px 15px;
+  }
+  
+  h1 {
+    font-size: 1.3rem;
+  }
+  
+  .logo-icon {
+    font-size: 1.4rem;
+  }
+  
+  .nav-links a {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+}
+
+/* --- Animation for smooth transitions --- */
+.nav-links {
+  transition: all 0.3s ease-in-out;
+}
+
+@media (max-width: 992px) {
+  .nav-links {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+  }
+  
+  .nav-links.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
 }
 </style>
 
 <script>
-  // Mobile menu toggle
+// Mobile menu toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
   const menuBtn = document.getElementById('menuBtn');
   const navLinks = document.getElementById('navLinks');
-  menuBtn.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-    menuBtn.innerHTML = navLinks.classList.contains('active') ? 
-      '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
-  });
+  
+  if (menuBtn && navLinks) {
+    menuBtn.addEventListener('click', function() {
+      navLinks.classList.toggle('active');
+      
+      // Change icon based on menu state
+      const icon = menuBtn.querySelector('i');
+      if (navLinks.classList.contains('active')) {
+        icon.className = 'fas fa-times';
+      } else {
+        icon.className = 'fas fa-bars';
+      }
+    });
+    
+    // Close mobile menu when clicking on a link
+    const navLinksElements = navLinks.querySelectorAll('a');
+    navLinksElements.forEach(link => {
+      link.addEventListener('click', function() {
+        navLinks.classList.remove('active');
+        const icon = menuBtn.querySelector('i');
+        icon.className = 'fas fa-bars';
+      });
+    });
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!navLinks.contains(event.target) && !menuBtn.contains(event.target)) {
+        navLinks.classList.remove('active');
+        const icon = menuBtn.querySelector('i');
+        icon.className = 'fas fa-bars';
+      }
+    });
+  }
 </script>

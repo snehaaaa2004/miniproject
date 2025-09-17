@@ -485,90 +485,94 @@ $name = $_SESSION['name'] ?? 'User';
 
       <div class="form-content">
         <form method="POST" action="filter_result.php">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="specialization" class="form-label">
-                <i class="fas fa-stethoscope"></i>
-                Specialization
-              </label>
-              <div class="select-wrapper">
-                <select id="specialization" name="specialization" class="form-select">
-                  <option value="">All Specializations</option>
-                  <option value="Depression">Depression</option>
-                  <option value="Anxiety">Anxiety</option>
-                  <option value="Relationship">Relationship Counseling</option>
-                  <option value="Family">Family Therapy</option>
-                  <option value="Child">Child & Adolescent Therapy</option>
-                  <option value="Group">Group Therapy</option>
-                  <option value="Trauma">Trauma & PTSD</option>
-                  <option value="Addiction">Addiction Counseling</option>
-                </select>
-              </div>
-            </div>
+  <div class="form-grid">
+    <!-- Specialization -->
+    <div class="form-group">
+      <label for="specialization" class="form-label">
+        <i class="fas fa-stethoscope"></i>
+        Specialization
+      </label>
+      <div class="select-wrapper">
+        <select id="specialization" name="specialization" class="form-select" required>
+          <option value="" disabled selected>Select Specialization</option>
+          <option value="Depression">Depression</option>
+          <option value="Anxiety">Anxiety</option>
+          <option value="Relationship">Relationship Counseling</option>
+          <option value="Family">Family Therapy</option>
+          <option value="Child">Child & Adolescent Therapy</option>
+          <option value="Group">Group Therapy</option>
+          <option value="Trauma">Trauma & PTSD</option>
+          <option value="Addiction">Addiction Counseling</option>
+        </select>
+      </div>
+    </div>
 
-            <div class="form-group">
-              <label for="gender" class="form-label">
-                <i class="fas fa-user"></i>
-                Preferred Gender
-              </label>
-              <div class="select-wrapper">
-                <select id="gender" name="gender" class="form-select">
-                  <option value="">No Preference</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Non-binary">Non-binary</option>
-                </select>
-              </div>
-            </div>
+    <!-- Gender -->
+    <div class="form-group">
+      <label for="gender" class="form-label">
+        <i class="fas fa-user"></i>
+        Preferred Gender
+      </label>
+      <div class="select-wrapper">
+        <select id="gender" name="gender" class="form-select" required>
+          <option value="" disabled selected>Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Non-binary">Non-binary</option>
+        </select>
+      </div>
+    </div>
 
-            <div class="form-group">
-              <label for="language" class="form-label">
-                <i class="fas fa-language"></i>
-                Language Preference
-              </label>
-              <input type="text" id="language" name="language" class="form-input" 
-                     placeholder="English, Hindi, Spanish...">
-            </div>
+    <!-- Language -->
+    <div class="form-group">
+      <label for="language" class="form-label">
+        <i class="fas fa-language"></i>
+        Language Preference
+      </label>
+      <input type="text" id="language" name="language" class="form-input" 
+             placeholder="English, Hindi, Spanish..." required>
+    </div>
 
-            <div class="form-group">
-              <label for="mode" class="form-label">
-                <i class="fas fa-video"></i>
-                Session Type
-              </label>
-              <div class="select-wrapper">
-                <select id="mode" name="mode" class="form-select">
-                  <option value="">Any Session Type</option>
-                  <option value="Google meet">Video Call</option>
-                  <option value="Phone">Audio Call</option>
-                  <option value="Offline">In-Person</option>
-                </select>
-              </div>
-            </div>
+    <!-- Session Type -->
+    <div class="form-group">
+      <label for="mode" class="form-label">
+        <i class="fas fa-video"></i>
+        Session Type
+      </label>
+      <div class="select-wrapper">
+        <select id="mode" name="mode" class="form-select" required>
+          <option value="" disabled selected>Select Session Type</option>
+          <option value="Video Call">Video Call</option>
+          <option value="Audio Call">Audio Call</option>
+          <option value="In-person">In-Person</option>
+        </select>
+      </div>
+    </div>
 
-            <div class="form-group full-width">
-              <label for="availability" class="form-label">
-                <i class="fas fa-clock"></i>
-                Preferred Availability
-              </label>
-              <div class="select-wrapper">
-                <select id="availability" name="availability" class="form-select">
-                  <option value="">Any Time</option>
-                  <option value="Mornings (8AM-12PM)">Mornings (8AM-12PM)</option>
-                  <option value="Afternoons (12PM-5PM)">Afternoons (12PM-5PM)</option>
-                  <option value="Evenings (5PM-9PM)">Evenings (5PM-9PM)</option>
-                  <option value="Weekends">Weekends</option>
-                </select>
-              </div>
-            </div>
-          </div>
+    <!-- Availability -->
+    <div class="form-group full-width">
+      <label for="availability" class="form-label">
+        <i class="fas fa-clock"></i>
+        Preferred Availability
+      </label>
+      <div class="select-wrapper">
+        <select id="availability" name="availability" class="form-select" required>
+          <option value="" disabled selected>Select Availability</option>
+          <option value="Mornings (8AM-12PM)">Mornings (8AM-12PM)</option>
+          <option value="Afternoons (12PM-5PM)">Afternoons (12PM-5PM)</option>
+          <option value="Evenings (5PM-9PM)">Evenings (5PM-9PM)</option>
+          <option value="Weekends">Weekends</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-          
+  <button type="submit" class="btn-primary">
+    <i class="fas fa-search"></i>
+    <span>Find My Perfect Match</span>
+  </button>
+</form>
 
-          <button type="submit" class="btn-primary">
-            <i class="fas fa-search"></i>
-            <span>Find My Perfect Match</span>
-          </button>
-        </form>
       </div>
     </div>
   </div>

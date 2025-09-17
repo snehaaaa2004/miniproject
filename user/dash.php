@@ -65,15 +65,26 @@ $name = $_SESSION['name'] ?? 'User';
             flex-grow: 1;
         }
 
-        .header-content {
-            background: linear-gradient(to right, var(--primary), var(--primary-medium));
-            color: var(--surface);
-            padding: 3rem 1rem 5rem;
-            box-shadow: var(--shadow);
-            border-bottom-left-radius: var(--radius-lg);
-            border-bottom-right-radius: var(--radius-lg);
-            position: relative;
-        }
+       .header-content {
+    background: linear-gradient(to right, var(--primary), var(--primary-medium));
+    color: var(--surface);
+    padding: 2rem 1rem; /* reduced padding so it doesn't "hang" */
+    box-shadow: var(--shadow);
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+    position: relative; /* ensures it scrolls away */
+}
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;  /* remove the negative margin */
+    position: relative;
+    z-index: 10;
+}
+
+
+
         
         .header-text {
             max-width: 1200px;
@@ -203,6 +214,12 @@ $name = $_SESSION['name'] ?? 'User';
                 padding: 1.5rem;
             }
         }
+        header, 
+.header-content {
+  position: relative !important; /* disable sticky/fixed */
+  top: auto !important;
+}
+
     </style>
 </head>
 

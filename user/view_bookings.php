@@ -2,10 +2,13 @@
 session_start();
 include('../connect.php');
 include('../auth_check.php');
+include('navbar.php');
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.html");
     exit();
+    
+
 }
 
 $user_id = $_SESSION['user_id'];
@@ -83,9 +86,67 @@ while ($payment = $paymentsResult->fetch_assoc()) {
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            padding: 2rem;
             min-height: 100vh;
             color: #1e293b;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        body.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Loading Animation */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .page-loader.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loader-logo {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #4f46e5, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        .loader-text {
+            font-size: 1.1rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .container {
@@ -441,6 +502,15 @@ while ($payment = $paymentsResult->fetch_assoc()) {
     </style>
 </head>
 <body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-logo">
+            <i class="fas fa-brain"></i>
+        </div>
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading your appointments...</div>
+    </div>
+
     <div class="container">
         <h1 class="page-title">
             <i class="fas fa-calendar-check"></i>
@@ -573,6 +643,15 @@ while ($payment = $paymentsResult->fetch_assoc()) {
                                 <p class="review-date">
                                     <?= $rev['created_at'] ? date("F j, Y", strtotime($rev['created_at'])) : '' ?>
                                 </p>
+                                <?php if (!empty($rev['reply'])): ?>
+    <div style="margin-top: 1rem; padding: 1rem; background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 6px;">
+        <strong>Therapist’s Reply:</strong>
+        <p style="margin-top: 0.5rem; color: #166534;">
+            <?= nl2br(htmlspecialchars($rev['reply'])) ?>
+        </p>
+    </div>
+<?php endif; ?>
+
                                 
                                 <div style="margin-top: 1rem;">
                                     <button 
@@ -695,6 +774,20 @@ while ($payment = $paymentsResult->fetch_assoc()) {
     </div>
 
     <script>
+        // Page load animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show page content with animation after a short delay
+            setTimeout(function() {
+                document.getElementById('pageLoader').classList.add('fade-out');
+                document.body.classList.add('loaded');
+                
+                // Remove loader from DOM after animation completes
+                setTimeout(function() {
+                    document.getElementById('pageLoader').remove();
+                }, 500);
+            }, 1000); // Adjust timing as needed
+        });
+
         // Utility Functions
         function showLoading(element, show = true) {
             if (show) {

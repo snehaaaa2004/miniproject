@@ -252,9 +252,9 @@ $bio = $therapist['bio'] ?? '';
       <div class="input-group">
         <label class="required-field">Modes of Consultation:</label>
         <div class="checkbox-group">
-          <label><input type="checkbox" name="mode[]" value="Google meet" <?= in_array('Google meet', $modes) ? 'checked' : '' ?>> Video Call</label>
-          <label><input type="checkbox" name="mode[]" value="Phone" <?= in_array('Phone', $modes) ? 'checked' : '' ?>> Audio Call</label>
-          <label><input type="checkbox" name="mode[]" value="Offline" <?= in_array('Offline', $modes) ? 'checked' : '' ?>> In-person</label>
+          <label><input type="checkbox" name="mode[]" value="Video call" <?= in_array('Video call', $modes) ? 'checked' : '' ?>> Video Call</label>
+          <label><input type="checkbox" name="mode[]" value="Audio call" <?= in_array('Audio Call', $modes) ? 'checked' : '' ?>> Audio Call</label>
+          <label><input type="checkbox" name="mode[]" value="In-person" <?= in_array('In-person', $modes) ? 'checked' : '' ?>> In-person</label>
         </div>
       </div>
 

@@ -6,6 +6,7 @@
 // Prevent caching to disable back button access
 
 include('../auth_check.php');
+include('therapistnav.php');
 
 
 
@@ -56,73 +57,11 @@ include('../auth_check.php');
       min-height: 100vh;
     }
 
-    header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: var(--white);
-      padding: 1rem;
-      box-shadow: var(--shadow);
-    }
+   
 
-    .navbar {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 1rem;
-    }
+    
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .logo h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    .logo-icon {
-      font-size: 1.8rem;
-      color: var(--accent);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1.5rem;
-    }
-
-    .nav-links a {
-      color: var(--white);
-      text-decoration: none;
-      font-size: 1rem;
-      font-weight: 500;
-      transition: var(--transition);
-      padding: 0.5rem 0;
-      position: relative;
-    }
-
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background-color: var(--accent);
-      transition: var(--transition);
-    }
-
-    .nav-links a:hover::after {
-      width: 100%;
-    }
-
-    .nav-links a:hover {
-      color: var(--accent);
-    }
-
+    
     .mobile-menu-btn {
       display: none;
       background: none;
@@ -231,7 +170,7 @@ include('../auth_check.php');
       gap: 0.5rem;
       padding: 0.8rem 1.5rem;
       background-color: var(--primary);
-      color: var(--white);
+      color: var(--primary);
       border-radius: var(--radius);
       text-decoration: none;
       font-weight: 500;
@@ -329,26 +268,7 @@ include('../auth_check.php');
 </head>
 <body>
 
-  <header>
-    <div class="navbar">
-      <div class="logo">
-        <span class="logo-icon"><i class="fas fa-leaf"></i></span>
-        <h1>SerenityConnect</h1>
-      </div>
-      <button class="mobile-menu-btn" id="menuBtn">
-        <i class="fas fa-bars"></i>
-      </button>
-      <div class="nav-links" id="navLinks">
-        <a href="therapihome.php">Dashboard</a>
-        <a href="appointment.php">Appointments</a>
-        <a href="therapist_profile.php">Profile</a>
-        
-        <a href="customer_review.php" class="btn">View All Customer Reviews</a>
-
-        <a href="../logout.php">Logout</a>
-      </div>
-    </div>
-  </header>
+  
 
   <div class="dashboard-container">
     <div class="welcome-banner">
