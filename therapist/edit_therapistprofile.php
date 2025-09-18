@@ -37,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $targetFile = $targetDir . $uniqueName;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-            $imagePath = $uniqueName;
+            // Store the path with the 'uploads/' prefix
+            $imagePath = 'uploads/' . $uniqueName;
         }
     }
 
@@ -62,7 +63,8 @@ $therapist = mysqli_fetch_assoc($result);
 
 $availability = $therapist['availability'] ?? '';
 $modes = explode(',', $therapist['mode'] ?? '');
-$image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "../images/default-user.png";
+// Correctly construct the relative path for the image src
+$image = !empty($therapist['image']) ? "../" . $therapist['image'] : "../images/default-user.png";
 $bio = $therapist['bio'] ?? '';
 ?>
 <!DOCTYPE html>
@@ -196,12 +198,24 @@ $bio = $therapist['bio'] ?? '';
       h2 { font-size: 1.1rem; }
       input, select, textarea { font-size: 0.95rem; padding: 0.5rem; }
     }
+
+    /* Styles for validation */
+    .error-message {
+      color: var(--error);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      display: none; /* Hidden by default */
+    }
+
+    input.invalid, select.invalid, textarea.invalid {
+      border-color: var(--error);
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Edit Your Profile</h2>
-    <form method="POST" enctype="multipart/form-data">
+    <form id="editProfileForm" method="POST" enctype="multipart/form-data" novalidate>
 
       <div class="input-group">
         <label for="specialization" class="required-field">Specialization:</label>
@@ -216,16 +230,19 @@ $bio = $therapist['bio'] ?? '';
           <option value="Trauma & PTSD" <?= $therapist['specialization'] == 'Trauma & PTSD' ? 'selected' : '' ?>>Trauma & PTSD</option>
           <option value="Addiction Counseling" <?= $therapist['specialization'] == 'Addiction Counseling' ? 'selected' : '' ?>>Addiction Counseling</option>
         </select>
+        <div id="specializationError" class="error-message"></div>
       </div>
 
       <div class="input-group">
         <label for="experience" class="required-field">Experience (in years):</label>
         <input type="number" id="experience" name="experience" placeholder="e.g. 5" min="0" max="60" value="<?= htmlspecialchars($therapist['experience']) ?>" required>
+        <div id="experienceError" class="error-message"></div>
       </div>
 
       <div class="input-group">
         <label for="language" class="required-field">Languages Known:</label>
         <input type="text" id="language" name="language" placeholder="e.g. English, Hindi" value="<?= htmlspecialchars($therapist['language']) ?>" required>
+        <div id="languageError" class="error-message"></div>
       </div>
 
       <div class="input-group">
@@ -235,6 +252,7 @@ $bio = $therapist['bio'] ?? '';
           <label><input type="radio" name="gender" value="Female" <?= $therapist['gender'] === 'Female' ? 'checked' : '' ?>> Female</label>
           <label><input type="radio" name="gender" value="Non-binary" <?= $therapist['gender'] === 'Non-binary' ? 'checked' : '' ?>> Non-binary</label>
         </div>
+        <div id="genderError" class="error-message"></div>
       </div>
 
       <div class="input-group">
@@ -247,6 +265,7 @@ $bio = $therapist['bio'] ?? '';
           <option value="Weekends" <?= $availability == 'Weekends' ? 'selected' : '' ?>>Weekends</option>
           <option value="Any Time" <?= $availability == 'Any Time' ? 'selected' : '' ?>>Any Time</option>
         </select>
+        <div id="availabilityError" class="error-message"></div>
       </div>
 
       <div class="input-group">
@@ -256,21 +275,25 @@ $bio = $therapist['bio'] ?? '';
           <label><input type="checkbox" name="mode[]" value="Audio call" <?= in_array('Audio Call', $modes) ? 'checked' : '' ?>> Audio Call</label>
           <label><input type="checkbox" name="mode[]" value="In-person" <?= in_array('In-person', $modes) ? 'checked' : '' ?>> In-person</label>
         </div>
+        <div id="modeError" class="error-message"></div>
       </div>
 
       <div class="input-group">
         <label for="fees" class="required-field">Consultation Fees (in USD):</label>
         <input type="number" id="fees" name="fees" placeholder="e.g. 50" min="0" step="0.01" value="<?= htmlspecialchars($therapist['fees']) ?>" required>
+        <div id="feesError" class="error-message"></div>
       </div>
 
       <div class="input-group">
         <label for="bio" class="required-field">Bio:</label>
         <textarea id="bio" name="bio" rows="4" placeholder="Write a short bio about yourself..." required><?= htmlspecialchars($bio) ?></textarea>
+        <div id="bioError" class="error-message"></div>
       </div>
 
       <div class="input-group">
-        <label class="required-field">Upload Profile Image:</label>
-        <input type="file" name="image" accept="image/*">
+        <label>Upload Profile Image:</label>
+        <input type="file" id="image" name="image" accept="image/*">
+        <div id="imageError" class="error-message"></div>
       </div>
 
       <div class="img-preview">
@@ -280,5 +303,163 @@ $bio = $therapist['bio'] ?? '';
       <button type="submit">Save Changes</button>
     </form>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('editProfileForm');
+      
+      // Input fields
+      const specialization = document.getElementById('specialization');
+      const experience = document.getElementById('experience');
+      const language = document.getElementById('language');
+      const genderRadios = document.querySelectorAll('input[name="gender"]');
+      const availability = document.getElementById('availability');
+      const modeCheckboxes = document.querySelectorAll('input[name="mode[]"]');
+      const fees = document.getElementById('fees');
+      const bio = document.getElementById('bio');
+      const image = document.getElementById('image');
+
+      // Error message elements
+      const specializationError = document.getElementById('specializationError');
+      const experienceError = document.getElementById('experienceError');
+      const languageError = document.getElementById('languageError');
+      const genderError = document.getElementById('genderError');
+      const availabilityError = document.getElementById('availabilityError');
+      const modeError = document.getElementById('modeError');
+      const feesError = document.getElementById('feesError');
+      const bioError = document.getElementById('bioError');
+      const imageError = document.getElementById('imageError');
+
+      const showError = (input, errorElement, message) => {
+        input.classList.add('invalid');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+      };
+
+      const hideError = (input, errorElement) => {
+        input.classList.remove('invalid');
+        errorElement.style.display = 'none';
+      };
+
+      const validateSpecialization = () => {
+        if (specialization.value.trim() === '') {
+          showError(specialization, specializationError, 'Specialization is required.');
+          return false;
+        }
+        hideError(specialization, specializationError);
+        return true;
+      };
+
+      const validateExperience = () => {
+        if (experience.value.trim() === '') {
+          showError(experience, experienceError, 'Experience is required.');
+          return false;
+        }
+        if (parseInt(experience.value) < 0 || parseInt(experience.value) > 60) {
+          showError(experience, experienceError, 'Experience must be between 0 and 60 years.');
+          return false;
+        }
+        hideError(experience, experienceError);
+        return true;
+      };
+
+      const validateLanguage = () => {
+        const languageRegex = /^[a-zA-Z, ]+$/;
+        if (language.value.trim() === '') {
+          showError(language, languageError, 'Please enter at least one language.');
+          return false;
+        }
+        if (!languageRegex.test(language.value)) {
+            showError(language, languageError, 'Only letters, commas, and spaces are allowed.');
+            return false;
+        }
+        hideError(language, languageError);
+        return true;
+      };
+
+      const validateGender = () => {
+        const checked = document.querySelector('input[name="gender"]:checked');
+        if (!checked) {
+          showError(genderRadios[0], genderError, 'Please select your gender.');
+          return false;
+        }
+        hideError(genderRadios[0], genderError);
+        return true;
+      };
+
+      const validateAvailability = () => {
+        if (availability.value.trim() === '') {
+          showError(availability, availabilityError, 'Availability is required.');
+          return false;
+        }
+        hideError(availability, availabilityError);
+        return true;
+      };
+
+      const validateMode = () => {
+        const checked = Array.from(modeCheckboxes).some(cb => cb.checked);
+        if (!checked) {
+          showError(modeCheckboxes[0], modeError, 'Please select at least one mode of consultation.');
+          return false;
+        }
+        hideError(modeCheckboxes[0], modeError);
+        return true;
+      };
+
+      const validateFees = () => {
+        if (fees.value.trim() === '') {
+          showError(fees, feesError, 'Consultation fee is required.');
+          return false;
+        }
+        if (parseFloat(fees.value) < 0) {
+          showError(fees, feesError, 'Fee cannot be negative.');
+          return false;
+        }
+        hideError(fees, feesError);
+        return true;
+      };
+
+      const validateBio = () => {
+        if (bio.value.trim() === '') {
+          showError(bio, bioError, 'Bio is required.');
+          return false;
+        }
+        if (bio.value.trim().length < 50) {
+          showError(bio, bioError, 'Bio must be at least 50 characters long.');
+          return false;
+        }
+        hideError(bio, bioError);
+        return true;
+      };
+
+      // Live validation
+      specialization.addEventListener('change', validateSpecialization);
+      experience.addEventListener('input', validateExperience);
+      language.addEventListener('input', validateLanguage);
+      genderRadios.forEach(radio => radio.addEventListener('change', validateGender));
+      availability.addEventListener('change', validateAvailability);
+      modeCheckboxes.forEach(cb => cb.addEventListener('change', validateMode));
+      fees.addEventListener('input', validateFees);
+      bio.addEventListener('input', validateBio);
+
+      form.addEventListener('submit', (e) => {
+        // Run all validations on submit
+        const isSpecializationValid = validateSpecialization();
+        const isExperienceValid = validateExperience();
+        const isLanguageValid = validateLanguage();
+        const isGenderValid = validateGender();
+        const isAvailabilityValid = validateAvailability();
+        const isModeValid = validateMode();
+        const isFeesValid = validateFees();
+        const isBioValid = validateBio();
+
+        // If any validation fails, prevent form submission
+        if (!isSpecializationValid || !isExperienceValid || !isLanguageValid || !isGenderValid || !isAvailabilityValid || !isModeValid || !isFeesValid || !isBioValid) {
+          e.preventDefault();
+          alert('Please correct the errors before submitting.');
+        }
+      });
+    });
+  </script>
 </body>
 </html>

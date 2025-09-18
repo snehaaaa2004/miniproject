@@ -373,7 +373,16 @@ h2 {
       <?php if (mysqli_num_rows($result) > 0) : ?>
         <?php while ($row = mysqli_fetch_assoc($result)) : ?>
           <div class="card">
-            <img src="../uploads/<?= htmlspecialchars($row['image']) ?>" alt="Therapist Image" class="card-img">
+            <?php
+              // Construct the correct relative path for the image
+              $imagePath = !empty($row['image']) ? "../" . htmlspecialchars($row['image']) : "../images/default-user.png";
+              // Check if the file actually exists on the server
+              $imageFileSystemPath = $_SERVER['DOCUMENT_ROOT'] . '/serenity/' . $row['image'];
+              if (empty($row['image']) || !file_exists($imageFileSystemPath)) {
+                  $imagePath = "../images/default-user.png";
+              }
+            ?>
+            <img src="<?= $imagePath ?>" alt="Therapist Image" class="card-img">
             
             <div class="card-body">
               <h3 class="card-title"><?= htmlspecialchars($row['therapist_name']) ?></h3>

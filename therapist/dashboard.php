@@ -15,27 +15,8 @@ $experience     = $_POST['experience'] ?? '';
 $language       = $_POST['language'] ?? '';
 $gender         = $_POST['gender'] ?? '';
 $fees           = $_POST['fees'] ?? 0; // ✅ Ensure fees is defined
-$from_time      = $_POST['from_time'] ?? '';
-$to_time        = $_POST['to_time'] ?? '';
-
-// Convert to availability format
-$availability = "";
-if (!empty($from_time) && !empty($to_time)) {
-    $fromMinutes = strtotime($from_time);
-    $toMinutes   = strtotime($to_time);
-
-    if ($fromMinutes == strtotime('08:00 AM') && $toMinutes == strtotime('12:00 PM')) {
-        $availability = "Mornings (8AM-12PM)";
-    } elseif ($fromMinutes == strtotime('12:00 PM') && $toMinutes == strtotime('05:00 PM')) {
-        $availability = "Afternoons (12PM-5PM)";
-    } elseif ($fromMinutes == strtotime('05:00 PM') && $toMinutes == strtotime('09:00 PM')) {
-        $availability = "Evenings (5PM-9PM)";
-    } elseif ($from_time === 'Weekends') {
-        $availability = "Weekends";
-    } else {
-        $availability = "$from_time - $to_time";
-    }
-}
+$bio            = $_POST['bio'] ?? '';
+$availability   = $_POST['availability'] ?? ''; // Directly get availability from the form
 
 // Convert mode array to string
 $modeArray  = $_POST['mode'] ?? [];
@@ -67,12 +48,12 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
 }
 
 // Insert into therapists table
-$sql = "INSERT INTO therapists (id, user_id, gender, specialization, experience, language, availability, mode, fees, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+$sql = "INSERT INTO therapists (id, user_id, gender, specialization, experience, language, availability, mode, fees, image, bio)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $stmt = mysqli_prepare($conn, $sql);
 mysqli_stmt_bind_param(
     $stmt,
-    "ssssssssds",
+    "ssssssssdss",
     $therapistId,
     $user_id,
     $gender,
@@ -82,7 +63,8 @@ mysqli_stmt_bind_param(
     $availability,
     $modeString,
     $fees,
-    $imagePath
+    $imagePath,
+    $bio
 );
 
 if (mysqli_stmt_execute($stmt)) {

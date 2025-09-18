@@ -78,18 +78,18 @@ $result = $stmt->get_result();
     margin-bottom: 28px; 
     border-radius: 14px; 
     box-shadow: 0 6px 18px rgba(44,62,80,0.10); 
-    border-left: 6px solid #52a1fa;
+    border-left: 6px solid #115221ff;
     transition: box-shadow 0.2s, border 0.2s;
 }
 
 .review-container:hover {
     box-shadow: 0 10px 32px rgba(44,62,80,0.16);
-    border-left: 6px solid #376ac3;
+    border-left: 6px solid #7aa683ff;
 }
 
 .review-container h3 { 
     margin: 0 0 6px 0; 
-    color: #1c468f;
+    color: #115215ff;
     font-size: 1.25em;
     font-weight: 600;
 }
@@ -115,11 +115,13 @@ $result = $stmt->get_result();
 
 .reply-box { 
     margin-top: 15px; 
+    color:green;
 }
 
 textarea { 
     width: 100%; 
     padding: 12px 10px; 
+    font-family: 'Roboto', sans-serif;
     border-radius: 7px; 
     border: 1px solid #d0dae6; 
     font-size: 1.06em; 
@@ -131,7 +133,7 @@ textarea {
 
 textarea:focus {
     outline: none;
-    border: 1.5px solid #52a1fa;
+    border: 1.5px solid #154e26ff;
     background: #f2f8fd;
 }
 
@@ -160,8 +162,8 @@ button:hover, button:focus {
     border-radius: 7px; 
     margin-top: 18px; 
     font-size: 1.05em; 
-    color: #325489;
-    border-left: 4px solid #67aae7;
+    color: #0e5a24ff;
+    border-left: 4px solid #125b25ff;
     box-shadow: 0 1px 6px rgba(130,150,180,0.07);
 }
 
@@ -204,7 +206,9 @@ h2{
                     <form method="post">
                         <input type="hidden" name="review_id" value="<?= $row['id'] ?>">
                         <textarea name="reply" rows="3" placeholder="Write your reply..."></textarea>
-                        <button type="submit">Reply</button>
+                        <button type="submit" style="background-color: green; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+    Reply
+</button>
                     </form>
                 </div>
             <?php endif; ?>

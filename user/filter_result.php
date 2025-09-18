@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
     $stmtFee->close();
 
     // Insert appointment with amount
-    $stmt = $conn->prepare("INSERT INTO appointments (user_id, therapist_id, appointment_date, appointment_time, mode, phone, description, status, amount) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', ?)");
+    $stmt = $conn->prepare("INSERT INTO appointments (user_id, therapist_id, appointment_date, appointment_time, mode, phone, description, status, amount) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
     $stmt->bind_param("issssssd", $userId, $therapist_id, $appointment_date, $appointment_time, $mode, $phone, $description, $feeAmount);
 
     if ($stmt->execute()) {
@@ -380,6 +380,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
         .form-textarea {
             width: 100%;
             padding: 0.75rem;
+            font-family: 'Inter', sans-serif;
             border: 1px solid var(--border);
             border-radius: var(--radius);
             font-size: 0.9rem;
@@ -577,6 +578,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                 padding: 1rem;
             }
         }
+        .submit-booking-btn{
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -596,9 +614,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
         while ($row = mysqli_fetch_assoc($result)) {
             $therapistCount++;
             $therapistId = $row['id'];
-            $imagePath = "../uploads/" . htmlspecialchars($row['image']);
-            $defaultImage = "../uploads/default.png";
-            $finalImage = (!empty($row['image']) && file_exists($imagePath)) ? $imagePath : $defaultImage;
+            // Construct the correct web path for the <img> tag
+            $imageWebPath = !empty($row['image']) ? "../" . htmlspecialchars($row['image']) : "";
+            // Construct the file system path for the file_exists() check
+            $imageFileSystemPath = !empty($row['image']) ? __DIR__ . "/../" . $row['image'] : "";
+            
+            $defaultImage = "../images/default-user.png";
+            $finalImage = (!empty($imageWebPath) && file_exists($imageFileSystemPath)) ? $imageWebPath : $defaultImage;
             $timeSlots = generateTimeSlots($row['availability']);
 
             // Fetch reviews for this therapist
@@ -666,7 +688,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                     </button>
 
                     <div class="booking-form" id="form_<?php echo $therapistId; ?>">
-                        <form id="bookingForm_<?php echo $therapistId; ?>" method="POST">
+                        <form id="bookingForm_<?php echo $therapistId; ?>" method="POST" novalidate>
                             <div class="form-group">
                                 <label class="form-label">
                                     <i class="fas fa-clock"></i>
@@ -684,6 +706,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                                     }
                                     ?>
                                 </select>
+                                <div class="error-message"></div>
                             </div>
 
                             <div class="form-group">
@@ -701,6 +724,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                                     }
                                     ?>
                                 </select>
+                                <div class="error-message"></div>
                             </div>
 
                             <div class="form-group">
@@ -710,6 +734,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                                 </label>
                                 <input type="date" name="appointment_date" class="form-input" required 
                                        min="<?php echo date('Y-m-d'); ?>">
+                                <div class="error-message"></div>
                             </div>
 
                             <div class="form-group">
@@ -719,6 +744,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                                 </label>
                                 <input type="tel" name="phone" class="form-input" required 
                                        placeholder="Enter your phone number">
+                                <div class="error-message"></div>
                             </div>
 
                             <div class="form-group">
@@ -790,6 +816,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
                 form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const bookingForms = document.querySelectorAll('.booking-form form');
+
+            const showError = (input, message) => {
+                const formGroup = input.parentElement;
+                const errorDisplay = formGroup.querySelector('.error-message');
+                
+                input.classList.add('error');
+                errorDisplay.innerText = message;
+                errorDisplay.style.display = 'block';
+            };
+
+            const hideError = (input) => {
+                const formGroup = input.parentElement;
+                const errorDisplay = formGroup.querySelector('.error-message');
+
+                input.classList.remove('error');
+                errorDisplay.innerText = '';
+                errorDisplay.style.display = 'none';
+            };
+
+            bookingForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+
+                    const timeSelect = form.querySelector('select[name="appointment_time"]');
+                    const modeSelect = form.querySelector('select[name="mode"]');
+                    const dateInput = form.querySelector('input[name="appointment_date"]');
+                    const phoneInput = form.querySelector('input[name="phone"]');
+
+                    // Validate Time
+                    if (timeSelect.value === '') {
+                        isValid = false;
+                        showError(timeSelect, 'Please select a time slot.');
+                    } else {
+                        hideError(timeSelect);
+                    }
+
+                    // Validate Mode
+                    if (modeSelect.value === '') {
+                        isValid = false;
+                        showError(modeSelect, 'Please choose a session type.');
+                    } else {
+                        hideError(modeSelect);
+                    }
+
+                    // Validate Date
+                    if (dateInput.value === '') {
+                        isValid = false;
+                        showError(dateInput, 'Please select an appointment date.');
+                    } else {
+                        hideError(dateInput);
+                    }
+
+                    // Validate Phone
+                    const phoneRegex = /^[789]\d{9}$/;
+                    if (phoneInput.value.trim() === '') {
+                        isValid = false;
+                        showError(phoneInput, 'Phone number is required.');
+                    } else if (!phoneRegex.test(phoneInput.value.trim())) {
+                        isValid = false;
+                        showError(phoneInput, 'Please enter a valid phone number (10 digits).');
+                    } else {
+                        hideError(phoneInput);
+                    }
+
+                    if (!isValid) {
+                        e.preventDefault(); // Stop form submission
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

@@ -29,12 +29,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     }
 }
 
-// Fetch appointments for this therapist
-$result = mysqli_query($conn, "SELECT a.*, u.name AS user_name 
-                               FROM appointments a 
-                               JOIN users u ON a.user_id = u.id 
-                               WHERE a.therapist_id = '$therapist_id' 
-                               ORDER BY a.appointment_date, a.appointment_time");
+// Fetch appointments for this therapist, including payment status
+$stmt = $conn->prepare("
+    SELECT a.*, u.name AS user_name, p.payment_status
+    FROM appointments a
+    JOIN users u ON a.user_id = u.id
+    LEFT JOIN payments p ON a.id = p.appointment_id AND p.payment_status = 'completed'
+    WHERE a.therapist_id = ?
+    ORDER BY a.appointment_date, a.appointment_time
+");
+$stmt->bind_param("s", $therapist_id);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html>
@@ -123,42 +129,73 @@ $result = mysqli_query($conn, "SELECT a.*, u.name AS user_name
         .status.confirmed { background: #f7e665ff; color: #1a535c; }
         .status.cancelled { background: #fcd9df; color: #b73244; }
         .status.completed { background: #d6f5e3; color: #1f8a70; }
+        .status.paid { background: #c8e6c9; color: #2e7d32; } /* New style for Paid status */
         .button-group {
             margin-top: 20px;
         }
         .btn {
-    padding: 10px 18px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-confirm {  background-color: #28a745;   /* fresh green */
+    color: #145428ff;                /* white text for contrast */
     border: none;
     border-radius: 8px;
-    cursor: pointer;
-    margin-right: 8px;
-    font-size: 14px;
+    padding: 10px 18px;
+    font-size: 15px;
     font-weight: 500;
-    transition: background-color 0.3s, transform 0.2s;
-    background: green;   /* ✅ all buttons green */
-    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(15, 20, 16, 0.3);}
+        .btn-confirm:hover { background: #218838; }
+
+        .btn-cancel { background: #dc3545;
+        color: red; }
+        .btn-cancel:hover { background: #c82333; }
+
+        .btn-complete {
+    background-color: #28a745;   /* fresh green */
+    color: #145428ff;                /* white text for contrast */
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(15, 20, 16, 0.3);
 }
 
-.btn:hover {
+.btn-complete:hover {
+    background-color: #1c4726ff;   /* darker green */
+    color: #0e4316ff;                /* keep white for better readability */
     transform: translateY(-2px);
-    background: darkgreen; /* ✅ darker green on hover */
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
 }
 
-/* override all specific button types */
-.btn-confirm,
-.btn-cancel,
-.btn-complete {
-    background: green !important; 
-    color: white !important;
+.btn-complete:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
 }
 
+.btn-complete:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.5);
+}
 
         
-        .btn-confirm:hover { background: #176b56; }
-        .btn-cancel { background: #b73244; color: white; }
-        .btn-cancel:hover { background: #8a2432; }
-        .btn-complete { background: #39b4c7ff; color: green; }
-        .btn-complete:hover { background: #123d44; }
         form { display: inline; }
 
         @media (max-width: 768px) {
@@ -194,6 +231,10 @@ $result = mysqli_query($conn, "SELECT a.*, u.name AS user_name
     <?php else: ?>
         <div class="appointments-container">
             <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                <?php
+                    // Check if the appointment has a completed payment
+                    $isPaid = !empty($row['payment_status']) && $row['payment_status'] === 'completed';
+                ?>
                 <div class="card">
                     <h3><?= htmlspecialchars($row['user_name']) ?></h3>
                     <p><strong>Date:</strong> <?= htmlspecialchars($row['appointment_date']) ?></p>
@@ -205,29 +246,34 @@ $result = mysqli_query($conn, "SELECT a.*, u.name AS user_name
                         <span class="status <?= strtolower($row['status']) ?>">
                             <?= ucfirst($row['status']) ?>
                         </span>
+                        <?php if ($isPaid): ?>
+                            <span class="status paid">Paid</span>
+                        <?php endif; ?>
                     </p>
-                    <?php if ($row['status'] === 'pending'): ?>
-                        <div class="button-group">
-                            <form method="POST">
+                    
+                    <!-- Button Logic -->
+                    <div class="button-group">
+                        <?php if ($row['status'] === 'pending'): ?>
+                            <!-- Confirm/Cancel for pending appointments -->
+                            <form method="POST" style="display: inline;">
                                 <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
                                 <input type="hidden" name="new_status" value="confirmed">
                                 <button type="submit" name="update_status" class="btn btn-confirm">Confirm</button>
                             </form>
-                            <form method="POST">
+                            <form method="POST" style="display: inline;">
                                 <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
                                 <input type="hidden" name="new_status" value="cancelled">
                                 <button type="submit" name="update_status" class="btn btn-cancel">Cancel</button>
                             </form>
-                        </div>
-                    <?php elseif ($row['status'] === 'confirmed'): ?>
-                        <div class="button-group">
-                            <form method="POST">
+                        <?php elseif ($row['status'] === 'confirmed' && $isPaid): ?>
+                            <!-- Mark as Completed only if confirmed AND paid -->
+                            <form method="POST" style="display: inline;">
                                 <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
                                 <input type="hidden" name="new_status" value="completed">
                                 <button type="submit" name="update_status" class="btn btn-complete">Mark as Completed</button>
                             </form>
-                        </div>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             <?php endwhile; ?>
         </div>

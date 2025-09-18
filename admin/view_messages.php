@@ -1,6 +1,6 @@
 <?php
 include('../connect.php');
-include('adminnav.php');
+
 
 // Mark as read
 if (isset($_GET['read_id'])) {
@@ -115,33 +115,37 @@ $result = mysqli_query($conn, "SELECT * FROM contact_messages ORDER BY created_a
     }
 
     a.btn {
-      padding: 8px 14px;
-      background-color: var(--primary);
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 13px;
-      margin-right: 5px;
-      display: inline-block;
-      box-shadow: var(--box-shadow);
-      transition: var(--transition);
-    }
+  padding: 8px 14px;
+  background-color: var(--primary);
+  color: green; /* Changed from white to a darker color */
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-right: 5px;
+  display: inline-block;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+}
 
-    a.btn:hover {
-      background-color: var(--primary-dark);
-      transform: translateY(-2px);
-    }
+a.btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  color: red; /* Keep white text on hover for better contrast */
+}
 
-    .delete-btn {
-      background-color: #d32f2f;
-    }
+.delete-btn {
+  background-color: #d32f2f;
+  color: white; /* White text for better contrast on red background */
+}
 
-    .delete-btn:hover {
-      background-color: #b71c1c;
-    }
+.delete-btn:hover {
+  background-color: #b71c1c;
+  color: red;
+}
   </style>
 </head>
 <body>
+ <?php include('adminnav.php'); ?>
 
   
   <h2>📩 Contact Messages</h2>

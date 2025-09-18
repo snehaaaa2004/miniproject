@@ -21,7 +21,7 @@ if (!$therapist) {
 }
 
 // Get image path
-$image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "../images/default-user.png";
+$image = !empty($therapist['image']) ? "../" . $therapist['image'] : "../images/default-user.png";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -251,7 +251,7 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       gap: 0.5rem;
       padding: 0.8rem 1.5rem;
       background-color: var(--primary);
-      color: var(--white);
+      color: green;
       border-radius: var(--radius);
       text-decoration: none;
       font-weight: 500;
@@ -361,8 +361,10 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       
       .btn {
         width: 100%;
+        color:var(--white);
         justify-content: center;
       }
+      
     }
   </style>
 </head>
@@ -416,7 +418,7 @@ $image = !empty($therapist['image']) ? "../uploads/" . $therapist['image'] : "..
       </div>
 
       <div class="btn-container">
-        <a href="edit_therapistprofile.php" class="btn">
+        <a href="edit_therapistprofile.php" class="btn btn-outline">
           <i class="fas fa-edit"></i> Edit Profile
         </a>
         <a href="therapihome.php" class="btn btn-outline">

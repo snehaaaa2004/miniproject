@@ -1,50 +1,13 @@
 <?php
 session_start();
-include('../auth_check.php');
 include('../connect.php');
+include('therapistnav.php');
 
-// Generate custom therapist ID
-$check = mysqli_query($conn, "SELECT COUNT(*) AS total FROM therapists");
-$countData = mysqli_fetch_assoc($check);
-$nextId = $countData['total'] + 1;
-$therapistId = 'THR' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
-
-// Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $specialization = $_POST['specialization'] ?? '';
-    $experience = $_POST['experience'] ?? '';
-    $language = $_POST['language'] ?? '';
-    $gender = $_POST['gender'] ?? '';
-    $availability = $_POST['availability'] ?? '';
-    $modes = isset($_POST['mode']) ? implode(',', $_POST['mode']) : '';
-    $fees = $_POST['fees'] ?? '';
-    $bio = $_POST['bio'] ?? '';
-    $user_id = $_SESSION['user_id'];
-
-    // Handle image upload
-    $imageName = '';
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $imgTmp = $_FILES['image']['tmp_name'];
-        $imgExt = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-        $imgNewName = $user_id . '_' . time() . '.' . $imgExt;
-        $imgDest = '../uploads/' . $imgNewName;
-
-        if (move_uploaded_file($imgTmp, $imgDest)) {
-            $imageName = $imgNewName;
-        }
-    }
-
-    // Save therapist profile
-    $stmt = $conn->prepare("INSERT INTO therapists (id, user_id, specialization, experience, language, gender, availability, mode, fees, image, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssssssss", $therapistId, $user_id, $specialization, $experience, $language, $gender, $availability, $modes, $fees, $imageName, $bio);
-
-    if ($stmt->execute()) {
-        echo "<script>alert('Profile submitted successfully!'); window.location.href='therapihome.php';</script>";
-        exit;
-    } else {
-        echo "<script>alert('Error submitting profile.');</script>";
-    }
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Therapist') {
+    die("Unauthorized access.");
 }
+
+$user_id = $_SESSION['user_id'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       --light: #f8f9fa;
       --dark-gray: #6c757d;
       --error: #dc3545;
+      --success: #28a745;
       --border-radius: 8px;
       --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       --transition: all 0.3s ease;
@@ -160,12 +124,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-size: 2rem;
       font-weight: 600;
     }
-    .input-group { margin-bottom: 1.5rem; }
+    .input-group { 
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
     label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--secondary); }
     input, select, textarea {
       width: 100%; padding: 0.75rem; border: 1px solid #ced4da;
       border-radius: var(--border-radius); font-size: 1rem;
       background: var(--light);
+      transition: border-color 0.3s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(22, 97, 56, 0.1);
+    }
+    input.error, select.error, textarea.error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+    input.success, select.success, textarea.success {
+      border-color: var(--success);
+    }
+    .validation-error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .radio-group label, .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-weight: normal;
+      cursor: pointer;
+    }
+    .radio-group input[type="radio"], 
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 0.5rem;
+    }
+    .char-count {
+      font-size: 0.8rem;
+      color: var(--dark-gray);
+      text-align: right;
+      margin-top: 0.25rem;
+    }
+    .char-count.error {
+      color: var(--error);
     }
     button {
       background-color: var(--primary);
@@ -174,58 +186,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       border: none; border-radius: var(--border-radius);
       font-size: 1rem; cursor: pointer; width: 100%;
       font-weight: 600; margin-top: 1rem;
+      transition: var(--transition);
     }
-    button:hover { background-color: var(--primary-dark); }
+    button:hover { 
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    button:disabled {
+      background-color: var(--dark-gray);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
   </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav>
-  <div class="logo">SerenityConnect</div>
-  <div class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')">&#9776;</div>
-  <div class="nav-links">
-    <a href="therapihome.php">Home</a>
-    <a href="therapist.php">Profile</a>
-    <a href="appointments.php">Appointments</a>
-    <a href="messages.php">Messages</a>
-    <a href="../logout.php" class="logout-btn">Logout</a>
-  </div>
-</nav>
 
 <!-- Main Form -->
 <div class="main-container">
   <div class="register-container">
     <h2>Therapist Profile Submission</h2>
-    <form id="therapistProfileForm" action="therapist.php" method="POST" enctype="multipart/form-data" novalidate>
+    <form id="therapistProfileForm" action="dashboard.php" method="POST" enctype="multipart/form-data" novalidate>
       <div class="input-group">
         <label for="specialization">Specialization:</label>
         <select id="specialization" name="specialization" required>
           <option value="" disabled selected>Select specialization</option>
           <option value="Depression">Depression</option>
           <option value="Anxiety">Anxiety</option>
-          <option value="Relationship Counseling">Relationship Counseling</option>
-          <option value="Family Therapy">Family Therapy</option>
-          <option value="Child & Adolescent Therapy">Child & Adolescent Therapy</option>
-          <option value="Group Therapy">Group Therapy</option>
-          <option value="Trauma & PTSD">Trauma & PTSD</option>
-          <option value="Addiction Counseling">Addiction Counseling</option>
+          <option value="Relationship ">Relationship Counseling</option>
+          <option value="Family ">Family Therapy</option>
+          <option value="Child ">Child & Adolescent Therapy</option>
+          <option value="Group">Group Therapy</option>
+          <option value="Trauma ">Trauma & PTSD</option>
+          <option value="Addiction ">Addiction Counseling</option>
         </select>
+        <div class="validation-error" id="specializationError"></div>
       </div>
+      
       <div class="input-group">
         <label for="experience">Experience (in years):</label>
         <input type="number" id="experience" name="experience" min="0" max="60" required>
+        <div class="validation-error" id="experienceError"></div>
       </div>
+      
       <div class="input-group">
         <label for="language">Languages Known:</label>
         <input type="text" id="language" name="language" placeholder="e.g. English, Hindi" required>
+        <div class="validation-error" id="languageError"></div>
       </div>
+      
       <div class="input-group">
         <label>Gender:</label>
-        <label><input type="radio" name="gender" value="Male"> Male</label>
-        <label><input type="radio" name="gender" value="Female"> Female</label>
-        <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gender" value="Male"> Male</label>
+          <label><input type="radio" name="gender" value="Female"> Female</label>
+          <label><input type="radio" name="gender" value="Non-binary"> Non-binary</label>
+        </div>
+        <div class="validation-error" id="genderError"></div>
       </div>
+      
       <div class="input-group">
         <label for="availability">Availability:</label>
         <select id="availability" name="availability" required>
@@ -236,29 +258,340 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <option value="Weekends">Weekends</option>
           <option value="Any Time">Any Time</option>
         </select>
+        <div class="validation-error" id="availabilityError"></div>
       </div>
+      
       <div class="input-group">
         <label>Modes of Consultation:</label>
-        <label><input type="checkbox" name="mode[]" value="Video Call"> Video Call</label>
-        <label><input type="checkbox" name="mode[]" value="Audio Call"> Audio Call</label>
-        <label><input type="checkbox" name="mode[]" value="In-person"> In-person</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="mode[]" value="Video Call"> Video Call</label>
+          <label><input type="checkbox" name="mode[]" value="Audio Call"> Audio Call</label>
+          <label><input type="checkbox" name="mode[]" value="In-person"> In-person</label>
+        </div>
+        <div class="validation-error" id="modeError"></div>
       </div>
+      
       <div class="input-group">
         <label for="fees">Consultation Fees (USD):</label>
         <input type="number" id="fees" name="fees" min="0" step="0.01" required>
+        <div class="validation-error" id="feesError"></div>
       </div>
+      
       <div class="input-group">
-        <label>Upload Profile Image:</label>
-        <input type="file" name="image" accept="image/*" required>
+        <label for="image">Upload Profile Image:</label>
+        <input type="file" id="image" name="image" accept="image/*" required>
+        <div class="validation-error" id="imageError"></div>
       </div>
+      
       <div class="input-group">
         <label for="bio">Bio:</label>
-        <textarea id="bio" name="bio" rows="4" required></textarea>
+        <textarea id="bio" name="bio" rows="4" minlength="50" maxlength="500" required></textarea>
+        <div class="char-count" id="bioCharCount">0/500 characters (minimum 50 required)</div>
+        <div class="validation-error" id="bioError"></div>
       </div>
-      <button type="submit">Complete Profile Submission</button>
+      
+      <button type="submit" id="submitBtn">Complete Profile Submission</button>
     </form>
   </div>
 </div>
+
+<script>
+  // Form validation
+  const form = document.getElementById('therapistProfileForm');
+  const specialization = document.getElementById('specialization');
+  const experience = document.getElementById('experience');
+  const language = document.getElementById('language');
+  const genderRadios = document.querySelectorAll('input[name="gender"]');
+  const availability = document.getElementById('availability');
+  const modeCheckboxes = document.querySelectorAll('input[name="mode[]"]');
+  const fees = document.getElementById('fees');
+  const image = document.getElementById('image');
+  const bio = document.getElementById('bio');
+  const submitBtn = document.getElementById('submitBtn');
+  
+  // Error elements
+  const specializationError = document.getElementById('specializationError');
+  const experienceError = document.getElementById('experienceError');
+  const languageError = document.getElementById('languageError');
+  const genderError = document.getElementById('genderError');
+  const availabilityError = document.getElementById('availabilityError');
+  const modeError = document.getElementById('modeError');
+  const feesError = document.getElementById('feesError');
+  const imageError = document.getElementById('imageError');
+  const bioError = document.getElementById('bioError');
+  const bioCharCount = document.getElementById('bioCharCount');
+  
+  // Character counter for bio
+  bio.addEventListener('input', () => {
+    const length = bio.value.length;
+    bioCharCount.textContent = `${length}/500 characters (minimum 50 required)`;
+    
+    if (length > 0 && length < 50) {
+      bioCharCount.classList.add('error');
+    } else {
+      bioCharCount.classList.remove('error');
+    }
+    
+    validateBio();
+  });
+  
+  // Validation functions
+  const validateSpecialization = () => {
+    if (specialization.value === '' || specialization.value === null) {
+      specialization.classList.add('error');
+      specialization.classList.remove('success');
+      specializationError.textContent = 'Please select your specialization';
+      specializationError.style.display = 'block';
+      return false;
+    } else {
+      specialization.classList.remove('error');
+      specialization.classList.add('success');
+      specializationError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateExperience = () => {
+    const experienceValue = experience.value.trim();
+    
+    if (experienceValue === '') {
+      experience.classList.add('error');
+      experience.classList.remove('success');
+      experienceError.textContent = 'Experience is required';
+      experienceError.style.display = 'block';
+      return false;
+    } else if (experienceValue < 0 || experienceValue > 60) {
+      experience.classList.add('error');
+      experience.classList.remove('success');
+      experienceError.textContent = 'Experience must be between 0 and 60 years';
+      experienceError.style.display = 'block';
+      return false;
+    } else {
+      experience.classList.remove('error');
+      experience.classList.add('success');
+      experienceError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateLanguage = () => {
+    const languageValue = language.value.trim();
+    
+    if (languageValue === '') {
+      language.classList.add('error');
+      language.classList.remove('success');
+      languageError.textContent = 'Languages known is required';
+      languageError.style.display = 'block';
+      return false;
+    } else if (!/^[a-zA-Z\s,]+$/.test(languageValue)) {
+      language.classList.add('error');
+      language.classList.remove('success');
+      languageError.textContent = 'Languages should only contain letters, spaces, and commas';
+      languageError.style.display = 'block';
+      return false;
+    } else {
+      language.classList.remove('error');
+      language.classList.add('success');
+      languageError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateGender = () => {
+    let isChecked = false;
+    for (const radio of genderRadios) {
+      if (radio.checked) {
+        isChecked = true;
+        break;
+      }
+    }
+    
+    if (!isChecked) {
+      genderError.textContent = 'Please select your gender';
+      genderError.style.display = 'block';
+      return false;
+    } else {
+      genderError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateAvailability = () => {
+    if (availability.value === '' || availability.value === null) {
+      availability.classList.add('error');
+      availability.classList.remove('success');
+      availabilityError.textContent = 'Please select your availability';
+      availabilityError.style.display = 'block';
+      return false;
+    } else {
+      availability.classList.remove('error');
+      availability.classList.add('success');
+      availabilityError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateMode = () => {
+    let isChecked = false;
+    for (const checkbox of modeCheckboxes) {
+      if (checkbox.checked) {
+        isChecked = true;
+        break;
+      }
+    }
+    
+    if (!isChecked) {
+      modeError.textContent = 'Please select at least one consultation mode';
+      modeError.style.display = 'block';
+      return false;
+    } else {
+      modeError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateFees = () => {
+    const feesValue = fees.value.trim();
+    
+    if (feesValue === '') {
+      fees.classList.add('error');
+      fees.classList.remove('success');
+      feesError.textContent = 'Consultation fees is required';
+      feesError.style.display = 'block';
+      return false;
+    } else if (feesValue < 0) {
+      fees.classList.add('error');
+      fees.classList.remove('success');
+      feesError.textContent = 'Fees cannot be negative';
+      feesError.style.display = 'block';
+      return false;
+    } else if (feesValue > 1000) {
+      fees.classList.add('error');
+      fees.classList.remove('success');
+      feesError.textContent = 'Fees cannot exceed $1000';
+      feesError.style.display = 'block';
+      return false;
+    } else {
+      fees.classList.remove('error');
+      fees.classList.add('success');
+      feesError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateImage = () => {
+    if (image.value === '') {
+      image.classList.add('error');
+      image.classList.remove('success');
+      imageError.textContent = 'Profile image is required';
+      imageError.style.display = 'block';
+      return false;
+    } else {
+      // Check file type
+      const allowedExtensions = /(\.jpg|\.jpeg|\.png|\.gif)$/i;
+      if (!allowedExtensions.exec(image.value)) {
+        image.classList.add('error');
+        image.classList.remove('success');
+        imageError.textContent = 'Please upload an image file (JPEG, PNG, GIF)';
+        imageError.style.display = 'block';
+        return false;
+      }
+      
+      image.classList.remove('error');
+      image.classList.add('success');
+      imageError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  const validateBio = () => {
+    const bioValue = bio.value.trim();
+    
+    if (bioValue === '') {
+      bio.classList.add('error');
+      bio.classList.remove('success');
+      bioError.textContent = 'Bio is required';
+      bioError.style.display = 'block';
+      return false;
+    } else if (bioValue.length < 50) {
+      bio.classList.add('error');
+      bio.classList.remove('success');
+      bioError.textContent = 'Bio must be at least 50 characters long';
+      bioError.style.display = 'block';
+      return false;
+    } else if (bioValue.length > 500) {
+      bio.classList.add('error');
+      bio.classList.remove('success');
+      bioError.textContent = 'Bio cannot exceed 500 characters';
+      bioError.style.display = 'block';
+      return false;
+    } else {
+      bio.classList.remove('error');
+      bio.classList.add('success');
+      bioError.style.display = 'none';
+      return true;
+    }
+  };
+  
+  // Event listeners for real-time validation
+  specialization.addEventListener('change', validateSpecialization);
+  experience.addEventListener('input', validateExperience);
+  experience.addEventListener('blur', validateExperience);
+  language.addEventListener('input', validateLanguage);
+  language.addEventListener('blur', validateLanguage);
+  for (const radio of genderRadios) {
+    radio.addEventListener('change', validateGender);
+  }
+  availability.addEventListener('change', validateAvailability);
+  for (const checkbox of modeCheckboxes) {
+    checkbox.addEventListener('change', validateMode);
+  }
+  fees.addEventListener('input', validateFees);
+  fees.addEventListener('blur', validateFees);
+  image.addEventListener('change', validateImage);
+  bio.addEventListener('input', validateBio);
+  bio.addEventListener('blur', validateBio);
+  
+  // Form submission handler
+  form.addEventListener('submit', (e) => {
+    // Validate all fields
+    const isSpecializationValid = validateSpecialization();
+    const isExperienceValid = validateExperience();
+    const isLanguageValid = validateLanguage();
+    const isGenderValid = validateGender();
+    const isAvailabilityValid = validateAvailability();
+    const isModeValid = validateMode();
+    const isFeesValid = validateFees();
+    const isImageValid = validateImage();
+    const isBioValid = validateBio();
+    
+    // If any field is invalid, prevent form submission
+    if (!isSpecializationValid || !isExperienceValid || !isLanguageValid || 
+        !isGenderValid || !isAvailabilityValid || !isModeValid || 
+        !isFeesValid || !isImageValid || !isBioValid) {
+      e.preventDefault();
+      
+      // Focus on first error field
+      if (!isSpecializationValid) {
+        specialization.focus();
+      } else if (!isExperienceValid) {
+        experience.focus();
+      } else if (!isLanguageValid) {
+        language.focus();
+      } else if (!isGenderValid) {
+        genderRadios[0].focus();
+      } else if (!isAvailabilityValid) {
+        availability.focus();
+      } else if (!isFeesValid) {
+        fees.focus();
+      } else if (!isImageValid) {
+        image.focus();
+      } else if (!isBioValid) {
+        bio.focus();
+      }
+    }
+  });
+</script>
 
 </body>
 </html>

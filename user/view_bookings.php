@@ -85,9 +85,9 @@ while ($payment = $paymentsResult->fetch_assoc()) {
         
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background: linear-gradient(135deg, #c7cfc9ff 0%, #8da790ff 100%);
             min-height: 100vh;
-            color: #1e293b;
+            color: #1e3b1eff;
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.5s ease, transform 0.5s ease;
@@ -175,7 +175,7 @@ while ($payment = $paymentsResult->fetch_assoc()) {
         
         /* Card Styling */
         .booking-card {
-            background: #ffffff;
+            background: #ffffffff;
             border-radius: 16px;
             padding: 2rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -292,8 +292,8 @@ while ($payment = $paymentsResult->fetch_assoc()) {
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #4f46e5, #4338ca);
-            color: white;
+            background: linear-gradient(135deg, #155629ff, #4338ca);
+            color: #155629ff;
         }
         
         .btn-primary:hover {
@@ -302,8 +302,8 @@ while ($payment = $paymentsResult->fetch_assoc()) {
         }
         
         .btn-success {
-            background: linear-gradient(135deg, #059669, #047857);
-            color: white;
+            background: linear-gradient(135deg, blue, #047857);
+            color: green;
         }
         
         .btn-success:hover {
@@ -312,25 +312,64 @@ while ($payment = $paymentsResult->fetch_assoc()) {
         }
         
         .btn-warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
+            background: linear-gradient(135deg, #13481fff, #2563eb); /* New Blue Gradient */
+            color: green;
         }
         
         .btn-warning:hover {
-            background: linear-gradient(135deg, #d97706, #b45309);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             transform: translateY(-1px);
         }
         
         .btn-danger {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: white;
+            background: linear-gradient(135deg, #ef4444, #dc2626); /* New Red Gradient */
+            color: red;
         }
         
         .btn-danger:hover {
-            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             transform: translateY(-1px);
         }
-        
+        .btn .btn-danger .cancel-btn{
+            background: red !important; 
+            color: green !important;
+        }
+        .cancel-btn {
+    background-color: #dc3545; /* Bootstrap danger red */
+    color: #972424ff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* spacing between icon and text */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0px 2px 5px rgba(220, 53, 69, 0.3);
+}
+
+.cancel-btn i {
+    font-size: 16px;
+}
+
+.cancel-btn:hover {
+    background-color: #c82333; /* darker red */
+    transform: translateY(-2px);
+    box-shadow: 0px 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.cancel-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0px 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.cancel-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.4);
+}
+
         /* Review Section */
         .review-section {
             margin-top: 1.5rem;
@@ -499,6 +538,8 @@ while ($payment = $paymentsResult->fetch_assoc()) {
                 padding: 1.5rem;
             }
         }
+       
+        
     </style>
 </head>
 <body>
@@ -512,7 +553,7 @@ while ($payment = $paymentsResult->fetch_assoc()) {
     </div>
 
     <div class="container">
-        <h1 class="page-title">
+        <h1 class="page-title" color=green>
             <i class="fas fa-calendar-check"></i>
             My Appointments
         </h1>
@@ -605,17 +646,30 @@ while ($payment = $paymentsResult->fetch_assoc()) {
                         </div>
                     </div>
 
-                    <!-- Payment Button -->
-                    <?php if (strtolower($row['status']) === 'confirmed' && !$isPaid): ?>
-                        <form action="payments.php" method="POST" style="margin-bottom: 1rem;">
-                            <input type="hidden" name="appointment_id" value="<?= (int)$row['id'] ?>">
-                            <input type="hidden" name="therapist_id" value="<?= htmlspecialchars($row['therapist_id']) ?>">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-credit-card"></i>
-                                Pay Now ($<?= htmlspecialchars($row['fees']) ?>)
+                    <!-- Action Buttons -->
+                    <div class="action-buttons" style="margin-bottom: 1rem;">
+                        <?php if (in_array(strtolower($row['status']), ['pending', 'confirmed'])): ?>
+                            <button 
+                                class="btn btn-danger cancel-btn"
+                                data-appointment-id="<?= (int)$row['id'] ?>"
+                            >
+                                <i class="fas fa-times-circle"></i>
+                                Cancel Appointment
                             </button>
-                        </form>
-                    <?php endif; ?>
+                        <?php endif; ?>
+
+                        <!-- Payment Button -->
+                        <?php if (strtolower($row['status']) === 'confirmed' && !$isPaid): ?>
+                            <form action="payments.php" method="POST" style="display: inline;">
+                                <input type="hidden" name="appointment_id" value="<?= (int)$row['id'] ?>">
+                                <input type="hidden" name="therapist_id" value="<?= htmlspecialchars($row['therapist_id']) ?>">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-credit-card"></i>
+                                    Pay Now ($<?= htmlspecialchars($row['fees']) ?>)
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
 
                     <!-- Review Section -->
                     <?php if ($hasReview): 
@@ -713,11 +767,11 @@ while ($payment = $paymentsResult->fetch_assoc()) {
                 </div>
                 <?php endwhile; ?>
             <?php else: ?>
-                <div class="no-appointments">
-                    <i class="far fa-calendar-times"></i>
+                <div class="no-appointments" color=green>
+                    <i class="far fa-calendar-times" ></i>
                     <h2>No Appointments Found</h2>
                     <p>You haven't booked any appointments yet.</p>
-                    <a href="../therapists.php" class="btn btn-primary" style="margin-top: 1rem;">
+                    <a href="../therapists.php" class="btn btn-primary" back-ground=green style="margin-top: 1rem;">
                         <i class="fas fa-search"></i>
                         Find a Therapist
                     </a>
@@ -727,7 +781,7 @@ while ($payment = $paymentsResult->fetch_assoc()) {
     </div>
 
     <!-- Edit Review Modal -->
-    <div class="modal" id="editReviewModal">
+    <div class="modal" id="editReviewModal" color=blue>
         <div class="modal-content">
             <div class="modal-header">
                 <i class="fas fa-edit"></i>
@@ -952,6 +1006,49 @@ while ($payment = $paymentsResult->fetch_assoc()) {
                     } catch (error) {
                         console.error('Delete error:', error);
                         alert('Error: ' + error.message);
+                    }
+                });
+            });
+
+            // --- NEW: Handle Appointment Cancellation ---
+            document.querySelectorAll('.cancel-btn').forEach(button => {
+                button.addEventListener('click', async function() {
+                    if (!confirm('Are you sure you want to cancel this appointment?')) {
+                        return;
+                    }
+
+                    const appointmentId = this.dataset.appointmentId;
+                    const card = document.getElementById(`appointment-${appointmentId}`);
+                    
+                    const formData = new FormData();
+                    formData.append('appointment_id', appointmentId);
+
+                    try {
+                        const response = await fetch('cancel.php', { // Changed from cancel_appointment.php
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await parseJsonSafe(response);
+
+                        if (data.success) {
+                            alert('Appointment has been cancelled.');
+                            // Update the UI dynamically
+                            const statusBadge = card.querySelector('.status');
+                            statusBadge.className = 'status cancelled';
+                            statusBadge.textContent = 'Cancelled';
+                            
+                            // Remove all action buttons from the card
+                            const actionButtonsContainer = card.querySelector('.action-buttons');
+                            if(actionButtonsContainer) {
+                                actionButtonsContainer.remove();
+                            }
+                        } else {
+                            alert('Error: ' + (data.message || 'Failed to cancel appointment.'));
+                        }
+                    } catch (error) {
+                        console.error('Cancellation error:', error);
+                        alert('An unexpected error occurred while trying to cancel.');
                     }
                 });
             });

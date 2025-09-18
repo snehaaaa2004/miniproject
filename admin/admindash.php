@@ -327,7 +327,7 @@ header p {
           <div class="card">
             <div class="card-header">
               <?php
-              $imagePath = "../uploads/" . htmlspecialchars($row['image']);
+              $imagePath = "../" . htmlspecialchars($row['image']);
               $defaultImage = "../uploads/default.png";
               ?>
               <img src="<?= (!empty($row['image']) && file_exists($imagePath)) ? $imagePath : $defaultImage ?>" 

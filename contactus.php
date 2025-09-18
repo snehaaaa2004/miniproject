@@ -10,13 +10,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $message = trim($_POST['message']);
 
   if ($name && $email && $message) {
-    $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $name, $email, $message);
-
-    if ($stmt->execute()) {
-      $success = "Thank you! Your message has been sent. We'll respond within 24-48 hours.";
+    // Validate name (only letters and spaces)
+    if (!preg_match("/^[a-zA-Z\s]+$/", $name)) {
+      $error = "Name should contain only letters and spaces.";
+    } 
+    // Validate email format
+    else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $error = "Please enter a valid email address.";
+    }
+    // Validate message length
+    else if (strlen($message) < 10) {
+      $error = "Message should be at least 10 characters long.";
     } else {
-      $error = "Something went wrong. Please try again later.";
+      $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)");
+      $stmt->bind_param("sss", $name, $email, $message);
+
+      if ($stmt->execute()) {
+        $success = "Thank you! Your message has been sent. We'll respond within 24-48 hours.";
+        // Clear form fields
+        $name = $email = $message = '';
+      } else {
+        $error = "Something went wrong. Please try again later.";
+      }
     }
   } else {
     $error = "All fields are required. Please complete the form.";
@@ -49,6 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       --radius: 8px;
       --radius-lg: 12px;
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      --error: #b00020;
+      --success: #2e7d32;
     }
 
     * {
@@ -261,6 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .form-group {
       margin-bottom: 1.5rem;
+      position: relative;
     }
 
     .form-group label {
@@ -328,14 +346,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .success {
       background-color: #edf7ed;
-      color: #1e4620;
+      color: var(--success);
       border: 1px solid #c5e1c5;
     }
 
     .error {
       background-color: #fde8e8;
-      color: #b00020;
+      color: var(--error);
       border: 1px solid #f5c6cb;
+    }
+
+    .validation-error {
+      color: var(--error);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .form-control.error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(176, 0, 32, 0.1);
+    }
+
+    .form-control.success {
+      border-color: var(--success);
+    }
+
+    .char-count {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      text-align: right;
+      margin-top: 0.25rem;
+    }
+
+    .char-count.error {
+      color: var(--error);
     }
 
     footer {
@@ -537,20 +582,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="status-msg error"><?php echo $error; ?></div>
       <?php endif; ?>
       
-      <form method="POST">
+      <form method="POST" id="contactForm" novalidate>
         <div class="form-group">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" required>
+          <label for="name">Full Name *</label>
+          <input type="text" id="name" name="name" class="form-control" 
+                 value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>"
+                 placeholder="Enter your full name" required
+                 pattern="[A-Za-z\s]{2,}" 
+                 title="Name should contain only letters and spaces (min 2 characters)">
+          <div class="validation-error" id="nameError"></div>
         </div>
         
         <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required>
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" name="email" class="form-control" 
+                 value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>"
+                 placeholder="Enter your email address" required>
+          <div class="validation-error" id="emailError"></div>
         </div>
         
         <div class="form-group">
-          <label for="message">Your Message</label>
-          <textarea id="message" name="message" class="form-control" placeholder="How can we help you?" required></textarea>
+          <label for="message">Your Message *</label>
+          <textarea id="message" name="message" class="form-control" 
+                    placeholder="How can we help you? (Minimum 10 characters)" 
+                    minlength="10" required><?php echo isset($message) ? htmlspecialchars($message) : ''; ?></textarea>
+          <div class="char-count" id="messageCharCount">0/10 characters (minimum 10 required)</div>
+          <div class="validation-error" id="messageError"></div>
         </div>
         
         <button type="submit" class="btn btn-block">Send Message</button>
@@ -576,7 +633,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a href="index.html">Home</a>
         <a href="about.html">About Us</a>
         <a href="self_help.php">Resources</a>
-        <a href="contactus.html">Contact</a>
+        <a href="contactus.php">Contact</a>
       </div>
       
       <div class="footer-column">
@@ -609,6 +666,147 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       navLinks.classList.toggle('active');
       menuBtn.innerHTML = navLinks.classList.contains('active') ? 
         '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+    });
+
+    // Form validation
+    const contactForm = document.getElementById('contactForm');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const messageInput = document.getElementById('message');
+    const nameError = document.getElementById('nameError');
+    const emailError = document.getElementById('emailError');
+    const messageError = document.getElementById('messageError');
+    const messageCharCount = document.getElementById('messageCharCount');
+
+    // Character counter for message
+    messageInput.addEventListener('input', () => {
+      const length = messageInput.value.length;
+      messageCharCount.textContent = `${length}/10 characters (minimum 10 required)`;
+      
+      if (length > 0 && length < 10) {
+        messageCharCount.classList.add('error');
+      } else {
+        messageCharCount.classList.remove('error');
+      }
+      
+      validateMessage();
+    });
+
+    // Validation functions
+    const isValidEmail = (email) => {
+      const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(email).toLowerCase());
+    };
+
+    const validateName = () => {
+      const nameValue = nameInput.value.trim();
+      
+      if (nameValue === '') {
+        nameInput.classList.add('error');
+        nameInput.classList.remove('success');
+        nameError.textContent = 'Name is required';
+        nameError.style.display = 'block';
+        return false;
+      } else if (!/^[A-Za-z\s]{2,}$/.test(nameValue)) {
+        nameInput.classList.add('error');
+        nameInput.classList.remove('success');
+        nameError.textContent = 'Name should contain only letters and spaces (min 2 characters)';
+        nameError.style.display = 'block';
+        return false;
+      } else {
+        nameInput.classList.remove('error');
+        nameInput.classList.add('success');
+        nameError.style.display = 'none';
+        return true;
+      }
+    };
+
+    const validateEmail = () => {
+      const emailValue = emailInput.value.trim();
+      
+      if (emailValue === '') {
+        emailInput.classList.add('error');
+        emailInput.classList.remove('success');
+        emailError.textContent = 'Email is required';
+        emailError.style.display = 'block';
+        return false;
+      } else if (!isValidEmail(emailValue)) {
+        emailInput.classList.add('error');
+        emailInput.classList.remove('success');
+        emailError.textContent = 'Please enter a valid email address';
+        emailError.style.display = 'block';
+        return false;
+      } else {
+        emailInput.classList.remove('error');
+        emailInput.classList.add('success');
+        emailError.style.display = 'none';
+        return true;
+      }
+    };
+
+    const validateMessage = () => {
+      const messageValue = messageInput.value.trim();
+      
+      if (messageValue === '') {
+        messageInput.classList.add('error');
+        messageInput.classList.remove('success');
+        messageError.textContent = 'Message is required';
+        messageError.style.display = 'block';
+        return false;
+      } else if (messageValue.length < 10) {
+        messageInput.classList.add('error');
+        messageInput.classList.remove('success');
+        messageError.textContent = 'Message must be at least 10 characters long';
+        messageError.style.display = 'block';
+        return false;
+      } else {
+        messageInput.classList.remove('error');
+        messageInput.classList.add('success');
+        messageError.style.display = 'none';
+        return true;
+      }
+    };
+
+    // Event listeners for real-time validation
+    nameInput.addEventListener('input', validateName);
+    nameInput.addEventListener('blur', validateName);
+
+    emailInput.addEventListener('input', validateEmail);
+    emailInput.addEventListener('blur', validateEmail);
+
+    messageInput.addEventListener('input', validateMessage);
+    messageInput.addEventListener('blur', validateMessage);
+
+    // Form submission handler
+    contactForm.addEventListener('submit', (e) => {
+      // Validate all fields
+      const isNameValid = validateName();
+      const isEmailValid = validateEmail();
+      const isMessageValid = validateMessage();
+      
+      // If any field is invalid, prevent form submission
+      if (!isNameValid || !isEmailValid || !isMessageValid) {
+        e.preventDefault();
+        
+        // Focus on first error field
+        if (!isNameValid) {
+          nameInput.focus();
+        } else if (!isEmailValid) {
+          emailInput.focus();
+        } else {
+          messageInput.focus();
+        }
+      }
+    });
+
+    // Initial validation check if form was submitted with errors
+    document.addEventListener('DOMContentLoaded', () => {
+      <?php if ($error): ?>
+        // If there was a form error, validate all fields to show errors
+        validateName();
+        validateEmail();
+        validateMessage();
+      <?php endif; ?>
     });
   </script>
 
