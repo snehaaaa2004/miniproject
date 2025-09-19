@@ -1,7 +1,0 @@
-[2025-09-18 08:14:20] Review request received | Data: {"user_id":24,"action":"add","post_keys":["action","appointment_id","therapist_id","rating","comment"]}
-[2025-09-18 08:14:20] Add review attempt | Data: {"therapist_id":"THR005","rating":3,"comment_length":60,"appointment_id":35}
-[2025-09-18 08:14:20] Review added successfully | Data: {"review_id":16}
-[2025-09-18 08:24:21] Review request received | Data: {"user_id":24,"action":"edit","post_keys":["action","review_id","rating","comment"]}
-[2025-09-18 08:24:21] Edit review attempt | Data: {"review_id":16,"rating":2,"comment_length":63,"user_id":24}
-[2025-09-18 08:24:21] Review ownership check | Data: {"review_found":true,"review_user_id":24,"current_user_id":24,"review_id":16}
-[2025-09-18 08:24:21] Review update completed | Data: {"affected_rows":1,"review_id":16}
