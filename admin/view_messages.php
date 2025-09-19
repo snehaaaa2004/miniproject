@@ -1,6 +1,13 @@
 <?php
 include('../connect.php');
+session_start();
 
+// Ensure only admin can access
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
+    header("Location: ../login.php");
+    exit();
+    include('adminnav.php');
+}
 
 // Mark as read
 if (isset($_GET['read_id'])) {
@@ -110,38 +117,50 @@ $result = mysqli_query($conn, "SELECT * FROM contact_messages ORDER BY created_a
       font-weight: 500;
     }
 
+    /* Style for read messages */
+    tr.read-message td {
+      background-color: #f9f9f9;
+      color: #888;
+    }
+    
+    tr.read-message td:first-child:before {
+      content: "✓ ";
+      color: var(--accent);
+      font-weight: bold;
+    }
+
     tr:hover td {
       background: #f9fdf9;
     }
 
     a.btn {
-  padding: 8px 14px;
-  background-color: var(--primary);
-  color: green; /* Changed from white to a darker color */
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 13px;
-  margin-right: 5px;
-  display: inline-block;
-  box-shadow: var(--box-shadow);
-  transition: var(--transition);
-}
+      padding: 8px 14px;
+      background-color: var(--primary);
+      color: green;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-right: 5px;
+      display: inline-block;
+      box-shadow: var(--box-shadow);
+      transition: var(--transition);
+    }
 
-a.btn:hover {
-  background-color: var(--primary-dark);
-  transform: translateY(-2px);
-  color: red; /* Keep white text on hover for better contrast */
-}
+    a.btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      color: red;
+    }
 
-.delete-btn {
-  background-color: #d32f2f;
-  color: white; /* White text for better contrast on red background */
-}
+    .delete-btn {
+      background-color: #d32f2f;
+      color: white;
+    }
 
-.delete-btn:hover {
-  background-color: #b71c1c;
-  color: red;
-}
+    .delete-btn:hover {
+      background-color: #b71c1c;
+      color: red;
+    }
   </style>
 </head>
 <body>
@@ -161,7 +180,7 @@ a.btn:hover {
     </tr>
 
     <?php $i = 1; while ($row = mysqli_fetch_assoc($result)) : ?>
-      <tr class="<?= $row['is_read'] ? '' : 'unread' ?>">
+      <tr class="<?= $row['is_read'] ? 'read-message' : 'unread' ?>">
         <td><?= $i++ ?></td>
         <td><?= htmlspecialchars($row['name']) ?></td>
         <td><?= htmlspecialchars($row['email']) ?></td>

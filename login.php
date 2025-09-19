@@ -468,21 +468,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </button>
       </form>
 
-      <div class="login-footer">
-        <a href="forgot-password.php">Forgot your password?</a>
-      </div>
 
-      <div class="divider">or</div>
-
-      <div class="social-login">
-        <a href="#" class="social-btn" title="Login with Google">
-          <i class="fab fa-google"></i>
-        </a>
-        <a href="#" class="social-btn" title="Login with Facebook">
-          <i class="fab fa-facebook-f"></i>
-        </a>
-      </div>
-
+      
       <div class="login-footer">
         Don't have an account? <a href="register.html">Create one</a>
       </div>

@@ -1,7 +1,7 @@
 <?php
 session_start();
 include('../connect.php');
-include('adminnav.php');
+
 
 // Check if admin is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
@@ -184,7 +184,7 @@ try {
     </style>
 </head>
 <body>
-
+<?PHP include('adminnav.php');?>
 <!-- 🌿 NAVBAR -->
 
 
@@ -253,40 +253,9 @@ try {
         </tbody>
     </table>
 
-    <!-- 🌿 MESSAGES -->
-    <h2>📩 Contact Messages</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Sl No</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Message</th>
-                <th>Received</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php $i=1; if ($msgResult->num_rows > 0): ?>
-                <?php while ($msg = $msgResult->fetch_assoc()): ?>
-                    <tr class="<?= $msg['is_read'] ? '' : 'unread' ?>">
-                        <td><?= $i++ ?></td>
-                        <td><?= htmlspecialchars($msg['name']) ?></td>
-                        <td><?= htmlspecialchars($msg['email']) ?></td>
-                        <td><?= nl2br(htmlspecialchars($msg['message'])) ?></td>
-                        <td><?= $msg['created_at'] ?></td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">
-                        📭 No messages found
-                    </td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-</div>
-
+    
+      
+               
 <script>
   document.querySelector(".menu-toggle").addEventListener("click", function () {
     document.querySelector(".navbar ul").classList.toggle("active");

@@ -1,7 +1,7 @@
 <?php
 session_start();
 include('../connect.php');
-include('adminnav.php');
+
 
 // Ensure only admin can access
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
@@ -340,7 +340,7 @@ h2 {
   </style>
 </head>
 <body>
-
+<?PHP include('adminnav.php'); ?>
   <!-- 🌿 NAVBAR -->
   
 

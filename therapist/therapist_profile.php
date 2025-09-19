@@ -1,5 +1,6 @@
 <?php
 session_start();
+include('../auth_check.php');
 include '../connect.php';
 include('therapistnav.php');
 

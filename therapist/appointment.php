@@ -1,7 +1,7 @@
 <?php
 session_start();
 include('../connect.php');
-include('therapistnav.php');
+include('../auth_check.php');
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Therapist') {
     die("Unauthorized access.");
@@ -224,6 +224,7 @@ $result = $stmt->get_result();
     </style>
 </head>
 <body>
+<?php include('therapistnav.php'); ?>
     <h2>Your Appointment Requests 🗓️</h2>
     
     <?php if (mysqli_num_rows($result) === 0): ?>
