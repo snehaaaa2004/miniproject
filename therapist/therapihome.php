@@ -315,7 +315,18 @@ include('therapistnav.php');
           <i class="fas fa-chart-bar"></i> View Analytics
         </a>
       </div>
-    </div>
+      <div class="action-card">
+  <i class="fas fa-envelope"></i>
+  <h3>Contact Admin</h3>
+  <p>Have a question or issue? Reach out to the admin directly.</p>
+  <a href="therapist_message.php" class="btn">
+    <i class="fas fa-paper-plane"></i> Send Message
+  </a>
+</div>
+
+    
+    <!-- NEW: View Admin Replies -->
+  
   </div>
 
   <footer>

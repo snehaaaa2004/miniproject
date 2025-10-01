@@ -282,6 +282,18 @@ $name = $_SESSION['name'] ?? 'User';
                     </a>
                 </div>
 
+                <!-- New Contact Admin Card -->
+                <div class="card">
+                    <div class="card-icon"><i class="fas fa-headset"></i></div>
+                    <div class="card-content">
+                        <h3>Contact Admin</h3>
+                        <p>Get help with technical issues, account questions, or provide feedback to our support team.</p>
+                    </div>
+                    <a href="contact_admin.php">
+                        Contact Support <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
                 <div class="card summary-card">
                     <h3>Your Wellness Journey</h3>
                     <p>SerenityConnect is here to provide personalized support for your mental health. Your dashboard is the central hub for connecting with therapists, managing your appointments, and accessing valuable resources to help you achieve emotional balance and personal growth. We're committed to helping you on every step of your journey.</p>

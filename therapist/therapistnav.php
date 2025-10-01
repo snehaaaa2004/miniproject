@@ -35,6 +35,9 @@ $current_page = 'therapihome.php';
       <a href="customer_review.php" class="<?= ($current_page == 'reviews.php') ? 'active' : '' ?>">
         <i class="fas fa-star"></i>Reviews
       </a>
+      <a href="therapist_message.php" class="<?= ($current_page == 'therapist_message.php') ? 'active' : '' ?>">
+        <i class="fas fa-star"></i>Support
+      </a>
       <a href="/serenity/logout.php" class="btn logout-btn">
         <i class="fas fa-sign-out-alt"></i>Logout
       </a>

@@ -319,6 +319,13 @@ header p {
       <a href="../logout.php" class="nav-link">
         <i class="fas fa-sign-out-alt"></i> Logout
       </a>
+      <a href="view_therapist_messages.php" class="nav-link">
+  <i class="fas fa-user-md"></i> Therapist Messages
+</a>
+<a href="user_messages.php" class="nav-link">
+  <i class="fas fa-user-md"></i> User Messages
+</a>
+
     </nav>
 
     <div class="therapists-grid">
